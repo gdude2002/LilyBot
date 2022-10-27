@@ -38,6 +38,7 @@ import org.hyacinthbots.lilybot.utils.requiredConfigs
  */
 class PublicUtilities : Extension() {
 	override val name = "public-utilities"
+	override val bundle = "lilybot"
 
 	override suspend fun setup() {
 		/**
@@ -55,7 +56,7 @@ class PublicUtilities : Extension() {
 				respond {
 					embed {
 						color = DISCORD_YELLOW
-						title = "Pong!"
+						title = translate("extensions.public-utilities.ping.title")
 
 						timestamp = Clock.System.now()
 

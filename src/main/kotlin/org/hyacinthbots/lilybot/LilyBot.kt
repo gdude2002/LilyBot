@@ -9,6 +9,7 @@ import com.kotlindiscord.kord.extensions.checks.hasPermission
 import com.kotlindiscord.kord.extensions.modules.extra.phishing.DetectionAction
 import com.kotlindiscord.kord.extensions.modules.extra.phishing.extPhishing
 import com.kotlindiscord.kord.extensions.modules.extra.pluralkit.extPluralKit
+import dev.kord.common.Locale
 import dev.kord.common.entity.Permission
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
@@ -135,6 +136,11 @@ suspend fun main() {
 			sentry {
 				enableIfDSN(SENTRY_DSN) // Use the nullable sentry function to allow the bot to be used without a DSN
 			}
+		}
+
+		i18n {
+			interactionUserLocaleResolver()
+			applicationCommandLocales = Locale.ALL.toMutableList()
 		}
 
 		// Connect to GitHub to allow the GitHub commands to function
