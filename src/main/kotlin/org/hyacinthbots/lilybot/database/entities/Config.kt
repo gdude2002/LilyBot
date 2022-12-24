@@ -1,6 +1,7 @@
 package org.hyacinthbots.lilybot.database.entities
 
 import dev.kord.common.entity.Snowflake
+import kotlinx.datetime.DateTimePeriod
 import kotlinx.serialization.Serializable
 
 /**
@@ -13,6 +14,9 @@ import kotlinx.serialization.Serializable
  * @property messageChannel The channel to send message logs to
  * @property enableMemberLogs If users joining or leaving the guild should be logged
  * @property memberLog The channel to send member logs to
+ * @property enablePublicMemberLogs If users joining or leaving the guild should be logged publicly
+ * @property publicMemberLog The channel to send public member logs to
+ * @property publicMemberLogData The data for public member logging
  * @since 4.0.0
  */
 @Serializable
@@ -23,6 +27,9 @@ data class LoggingConfigData(
 	val messageChannel: Snowflake?,
 	val enableMemberLogs: Boolean,
 	val memberLog: Snowflake?,
+	val enablePublicMemberLogs: Boolean,
+	val publicMemberLog: Snowflake?,
+	val publicMemberLogData: PublicMemberLogData?
 )
 
 /**
@@ -33,6 +40,9 @@ data class LoggingConfigData(
  * @property enabled If the support module is enabled or not
  * @property channel The ID of the action log for the guild
  * @property role The ID of the moderation role for the guild
+ * @property quickTimeoutLength The length of timeout to apply when using the moderate menu
+ * @property autoPunishOnWarn Whether to automatically apply punishments for reaching certain warn strike counts
+ * @property publicLogging Whether to log moderation actions publicly in the channel the command was run in
  * @since 4.0.0
  */
 @Serializable
@@ -41,6 +51,8 @@ data class ModerationConfigData(
 	val enabled: Boolean,
 	val channel: Snowflake?,
 	val role: Snowflake?,
+	val quickTimeoutLength: DateTimePeriod?,
+	val autoPunishOnWarn: Boolean?,
 	val publicLogging: Boolean?,
 )
 

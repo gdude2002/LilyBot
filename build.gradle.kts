@@ -1,4 +1,7 @@
+
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.io.FileOutputStream
+import java.util.*
 
 plugins {
     application
@@ -9,10 +12,12 @@ plugins {
     id("com.github.johnrengelman.shadow")
     id("io.gitlab.arturbosch.detekt")
     id("com.github.jakemarsden.git-hooks")
+    id("org.ajoberstar.grgit") version "5.0.0"
+    id("net.kyori.blossom") version "1.3.1"
 }
 
 group = "org.hyacinthbots.lilybot"
-version = "4.3.0"
+version = "4.5.0"
 
 repositories {
     mavenCentral()
@@ -51,7 +56,7 @@ repositories {
 dependencies {
     detektPlugins(libs.detekt)
 
-    implementation(libs.kord.extensions)
+    implementation(libs.kord.extensions.core)
     implementation(libs.kord.extensions.phishing)
     implementation(libs.kord.extensions.pluralkit)
     implementation(libs.kord.extensions.unsafe)
@@ -73,6 +78,8 @@ dependencies {
 
 	// Cozy's welcome module
 	implementation(libs.cozy.welcome)
+
+    implementation(libs.dma)
 }
 
 application {
@@ -84,6 +91,17 @@ gitHooks {
         mapOf("pre-commit" to "detekt")
     )
 }
+
+val generatedVersionDir = "$buildDir/generated-version"
+
+sourceSets {
+    main {
+        kotlin {
+            output.dir(generatedVersionDir)
+        }
+    }
+}
+
 
 tasks {
     withType<KotlinCompile> {
@@ -112,14 +130,28 @@ tasks {
     wrapper {
         /*
          * To update the gradle wrapper version, change
-         * the `gradleVersion` below and in `gradle-wrapper.properties`
+         * the `gradleVersion` below
          *
          * Then run the following command twice to update the gradle
          * scripts suitably
          * `./gradlew wrapper`
          */
-        gradleVersion = "7.5.1"
+        gradleVersion = "7.6"
         distributionType = Wrapper.DistributionType.BIN
+    }
+
+    register("generateVersionProperties") {
+        doLast {
+            val propertiesFile = file("$generatedVersionDir/version.properties")
+            propertiesFile.parentFile.mkdirs()
+            val properties = Properties()
+            properties.setProperty("version", "$version")
+            properties.store(FileOutputStream(propertiesFile), null)
+        }
+    }
+
+    named("processResources") {
+        dependsOn("generateVersionProperties")
     }
 }
 
@@ -128,4 +160,8 @@ detekt {
     config = files("$rootDir/detekt.yml")
 
     autoCorrect = true
+}
+
+blossom {
+    replaceToken("@version@", grgit.head().abbreviatedId)
 }

@@ -40,6 +40,7 @@ class GuildAnnouncements : Extension() {
 			initialResponse = InitialSlashCommandResponse.None
 
 			guild(TEST_GUILD_ID)
+			requirePermission(Permission.Administrator)
 
 			check {
 				hasPermission(Permission.Administrator)
@@ -113,7 +114,7 @@ class GuildAnnouncements : Extension() {
 												?: getLoggingChannelWithPerms(ConfigOptions.ACTION_LOG, it)
 												?: getSystemChannelWithPerms(it)
 												?: getFirstUsableChannel(it)
-												?: return@forEach
+												?: continue
 
 										channel.createEmbed {
 											title = header
