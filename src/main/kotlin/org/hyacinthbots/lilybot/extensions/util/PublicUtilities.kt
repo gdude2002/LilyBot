@@ -28,6 +28,7 @@ import dev.kord.rest.request.KtorRequestException
 import kotlinx.datetime.Clock
 import org.hyacinthbots.lilybot.database.collections.UtilityConfigCollection
 import org.hyacinthbots.lilybot.extensions.config.ConfigOptions
+import org.hyacinthbots.lilybot.utils.DEFAULT_BUNDLE_NAME
 import org.hyacinthbots.lilybot.utils.requiredConfigs
 
 /**
@@ -38,7 +39,7 @@ import org.hyacinthbots.lilybot.utils.requiredConfigs
  */
 class PublicUtilities : Extension() {
 	override val name = "public-utilities"
-	override val bundle = "lilybot"
+	override val bundle = DEFAULT_BUNDLE_NAME
 
 	override suspend fun setup() {
 		/**

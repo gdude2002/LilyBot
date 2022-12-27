@@ -23,3 +23,5 @@ val SENTRY_DSN = envOrNull("SENTRY_DSN")
 val ENVIRONMENT = env("ENVIRONMENT")
 
 const val BUILD_ID: String = "@version@"
+
+const val DEFAULT_BUNDLE_NAME = "lilybot"

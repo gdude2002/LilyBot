@@ -140,7 +140,7 @@ suspend fun main() {
 
 		i18n {
 			interactionUserLocaleResolver()
-			applicationCommandLocales = Locale.ALL.toMutableList()
+			applicationCommandLocale(Locale.ENGLISH_GREAT_BRITAIN, Locale.ENGLISH_UNITED_STATES, Locale.GERMAN)
 		}
 
 		// Connect to GitHub to allow the GitHub commands to function
