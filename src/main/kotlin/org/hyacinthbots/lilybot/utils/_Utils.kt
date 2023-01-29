@@ -7,11 +7,11 @@ import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.behavior.RoleBehavior
 import dev.kord.core.entity.Message
 import dev.kord.core.supplier.EntitySupplyStrategy
-import io.github.nocomment1105.discordmoderationactions.enums.DmResult
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.DateTimePeriod
 import mu.KotlinLogging
+import org.hyacinthbots.discordmoderationactions.enums.DmResult
 import org.hyacinthbots.lilybot.database.Database
 import org.hyacinthbots.lilybot.database.collections.ConfigMetaCollection
 import org.hyacinthbots.lilybot.database.collections.GalleryChannelCollection
@@ -20,6 +20,7 @@ import org.hyacinthbots.lilybot.database.collections.GuildLeaveTimeCollection
 import org.hyacinthbots.lilybot.database.collections.LoggingConfigCollection
 import org.hyacinthbots.lilybot.database.collections.MainMetaCollection
 import org.hyacinthbots.lilybot.database.collections.ModerationConfigCollection
+import org.hyacinthbots.lilybot.database.collections.NewsChannelPublishingCollection
 import org.hyacinthbots.lilybot.database.collections.ReminderCollection
 import org.hyacinthbots.lilybot.database.collections.RoleMenuCollection
 import org.hyacinthbots.lilybot.database.collections.StatusCollection
@@ -44,7 +45,8 @@ internal val utilsLogger = KotlinLogging.logger("Checks Logger")
  * @author NoComment1105
  * @since 4.1.0
  */
-suspend inline fun canPingRole(role: RoleBehavior?) = role != null && role.guild.getRole(role.id).mentionable
+suspend inline fun canPingRole(role: RoleBehavior?) =
+	role != null && role.guild.getRoleOrNull(role.id)?.mentionable == true
 
 /**
  * Get the number of guilds the bot is in.
@@ -215,21 +217,22 @@ suspend inline fun ExtensibleBotBuilder.database(migrate: Boolean) {
 			}
 
 			loadModule {
-				single { ModerationConfigCollection() } bind ModerationConfigCollection::class
-				single { SupportConfigCollection() } bind SupportConfigCollection::class
-				single { LoggingConfigCollection() } bind LoggingConfigCollection::class
-				single { UtilityConfigCollection() } bind UtilityConfigCollection::class
+				single { ConfigMetaCollection() } bind ConfigMetaCollection::class
 				single { GalleryChannelCollection() } bind GalleryChannelCollection::class
 				single { GithubCollection() } bind GithubCollection::class
 				single { GuildLeaveTimeCollection() } bind GuildLeaveTimeCollection::class
+				single { LoggingConfigCollection() } bind LoggingConfigCollection::class
 				single { MainMetaCollection() } bind MainMetaCollection::class
-				single { ConfigMetaCollection() } bind ConfigMetaCollection::class
+				single { ModerationConfigCollection() } bind ModerationConfigCollection::class
+				single { NewsChannelPublishingCollection() } bind NewsChannelPublishingCollection::class
 				single { ReminderCollection() } bind ReminderCollection::class
 				single { RoleMenuCollection() } bind RoleMenuCollection::class
 				single { StatusCollection() } bind StatusCollection::class
+				single { SupportConfigCollection() } bind SupportConfigCollection::class
 				single { TagsCollection() } bind TagsCollection::class
 				single { ThreadsCollection() } bind ThreadsCollection::class
 				single { UptimeCollection() } bind UptimeCollection::class
+				single { UtilityConfigCollection() } bind UtilityConfigCollection::class
 				single { WarnCollection() } bind WarnCollection::class
 				single { WelcomeChannelCollection() } bind WelcomeChannelCollection::class
 			}
