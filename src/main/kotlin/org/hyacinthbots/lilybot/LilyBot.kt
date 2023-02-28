@@ -148,6 +148,7 @@ suspend fun main() {
 			filePath = docFile
 			environment = ENVIRONMENT
 			useBuiltinCommandList = true
+			botName = "LilyBot"
 		}
 
 		// Connect to GitHub to allow the GitHub commands to function

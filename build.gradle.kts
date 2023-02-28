@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 @Suppress("DSL_SCOPE_VIOLATION")
@@ -14,23 +16,18 @@ plugins {
 }
 
 group = "org.hyacinthbots.lilybot"
-version = "4.6.3"
+version = "4.8.0"
 
 repositories {
 	mavenCentral()
 
 	maven {
-		name = "Kotlin Discord"
-		url = uri("https://maven.kotlindiscord.com/repository/maven-public/")
-	}
-
-	maven {
-		name = "Sonatype Snapshots"
+		name = "Sonatype Snapshots (Legacy)"
 		url = uri("https://oss.sonatype.org/content/repositories/snapshots")
 	}
 
 	maven {
-		name = "Sonatype Snapshots S01"
+		name = "Sonatype Snapshots"
 		url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
 	}
 
@@ -89,13 +86,11 @@ gitHooks {
 
 tasks {
 	withType<KotlinCompile> {
-		kotlinOptions {
-			jvmTarget = "17"
-			languageVersion = libs.plugins.kotlin.get().version.requiredVersion.substringBeforeLast(".")
+		compilerOptions {
+			jvmTarget.set(JvmTarget.fromTarget("17"))
+			languageVersion.set(KotlinVersion.fromVersion(libs.plugins.kotlin.get().version.requiredVersion.substringBeforeLast(".")))
 			incremental = true
-			freeCompilerArgs = listOf(
-				"-opt-in=kotlin.RequiresOptIn"
-			)
+			freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
 		}
 	}
 

@@ -100,7 +100,6 @@ class PublicUtilities : Extension() {
 					val requesterAsMember = requester?.asMemberOrNull(guild!!.id)
 					val self = this@PublicUtilities.kord.getSelf().asMemberOrNull(guild!!.id)
 
-					@Suppress("UnclearPrecedenceOfBinaryExpression")
 					if (requesterAsMember?.getTopRole()?.getPosition() != null &&
 						self?.getTopRole()?.getPosition() == null
 					) {
@@ -108,8 +107,8 @@ class PublicUtilities : Extension() {
 							content = translate("extensions.public-utilities.nickname.request.lilyNoRole.public")
 						}
 						return@action
-					} else if (requesterAsMember?.getTopRole()?.getPosition() ?: 0 >
-						self?.getTopRole()?.getPosition() ?: 0
+					} else if ((requesterAsMember?.getTopRole()?.getPosition() ?: 0) >
+						(self?.getTopRole()?.getPosition() ?: 0)
 					) {
 						respond {
 							content = translate("extensions.public-utilities.nickname.request.highestRole.public")
@@ -173,8 +172,8 @@ class PublicUtilities : Extension() {
 														translate("extensions.public-utilities.nickname.request.lilyNoRole.private")
 												}
 												return@button
-											} else if (requesterAsMember?.getTopRole()?.getPosition() ?: 0 >
-												self?.getTopRole()?.getPosition() ?: 0
+											} else if ((requesterAsMember?.getTopRole()?.getPosition() ?: 0) >
+												(self?.getTopRole()?.getPosition() ?: 0)
 											) {
 												respond {
 													content =
