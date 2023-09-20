@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
 	application
 
@@ -16,7 +15,7 @@ plugins {
 }
 
 group = "org.hyacinthbots.lilybot"
-version = "4.8.0"
+version = "4.9.0"
 
 repositories {
 	mavenCentral()
@@ -96,9 +95,7 @@ tasks {
 
 	jar {
 		manifest {
-			attributes(
-				"Main-Class" to "org.hyacinthbots.lilybot.LilyBotKt"
-			)
+			attributes("Main-Class" to "org.hyacinthbots.lilybot.LilyBotKt")
 		}
 	}
 
@@ -110,12 +107,18 @@ tasks {
 
 detekt {
 	buildUponDefaultConfig = true
-	config = files("$rootDir/detekt.yml")
+	config.setFrom("$rootDir/detekt.yml")
 
 	autoCorrect = true
 }
 
-blossom {
-	replaceToken("@build_id@", grgit.head().abbreviatedId)
-	replaceToken("@version@", project.version.toString())
+sourceSets {
+	main {
+		blossom {
+			kotlinSources {
+				property("build_id", grgit.head().abbreviatedId)
+				property("version", project.version.toString())
+			}
+		}
+	}
 }

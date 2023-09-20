@@ -13,6 +13,7 @@ import dev.kord.core.behavior.channel.createMessage
 import dev.kord.core.entity.Message
 import dev.kord.core.entity.channel.GuildMessageChannel
 import dev.kord.core.event.message.MessageBulkDeleteEvent
+import dev.kord.rest.builder.message.create.UserMessageCreateBuilder
 import dev.kord.rest.builder.message.create.embed
 import io.ktor.client.request.forms.ChannelProvider
 import io.ktor.util.cio.toByteReadChannel
@@ -81,33 +82,47 @@ class MessageDelete : Extension() {
 
 			action {
 				val messageLog =
-					getLoggingChannelWithPerms(ConfigOptions.MESSAGE_LOG, event.getGuildOrNull()!!) ?: return@action
+						getLoggingChannelWithPerms(ConfigOptions.MESSAGE_LOG, event.getGuildOrNull()!!) ?: return@action
 
 				val messages = generateBulkDeleteFile(event.messages)
 
 				messageLog.createMessage {
-					embed {
-						title = "Bulk Message Delete"
-						description = "A Bulk delete of messages occurred"
-						field {
-							name = "Location"
-							value = "${event.channel.mention} " +
-									"(${event.channel.asChannelOfOrNull<GuildMessageChannel>()?.name
-										?: "Could not get channel name"})"
-						}
-						field {
-							name = "Number of messages"
-							value = event.messages.size.toString()
-						}
-						color = DISCORD_PINK
-						timestamp = Clock.System.now()
-					}
-					addFile(
-						"messages.md",
-						ChannelProvider { messages!!.byteInputStream().toByteReadChannel() }
-					)
+					bulkDeleteEmbed(event, messages)
 				}
 			}
+		}
+	}
+
+	/**
+	 * Builds the embed for the bulk delete event.
+	 *
+	 * @param event The [MessageBulkDeleteEvent] for the event
+	 * @param messages The messages that were deleted
+	 */
+	private suspend fun UserMessageCreateBuilder.bulkDeleteEmbed(event: MessageBulkDeleteEvent, messages: String?) {
+		embed {
+			title = "Bulk Message Delete"
+			description = "A Bulk delete of messages occurred"
+			field {
+				name = "Location"
+				value = "${event.channel.mention} " +
+						"(${event.channel.asChannelOfOrNull<GuildMessageChannel>()?.name
+							?: "Could not get channel name"})"
+			}
+			field {
+				name = "Number of messages"
+				value = event.messages.size.toString()
+			}
+			color = DISCORD_PINK
+			timestamp = Clock.System.now()
+		}
+		if (messages != null) {
+			addFile(
+				"messages.md",
+				ChannelProvider { messages.byteInputStream().toByteReadChannel() }
+			)
+		} else {
+			content = "The messages from this event could not be gathered and logged."
 		}
 	}
 
@@ -131,7 +146,7 @@ class MessageDelete : Extension() {
 		messageLog.createEmbed {
 			author {
 				name = "Message deleted"
-				icon = proxiedMessage?.member?.avatarUrl ?: message.author?.avatar?.url
+				icon = proxiedMessage?.member?.avatarUrl ?: message.author?.avatar?.cdnUrl?.toUrl()
 			}
 			description =
 				"Location: ${message.channel.mention} " +

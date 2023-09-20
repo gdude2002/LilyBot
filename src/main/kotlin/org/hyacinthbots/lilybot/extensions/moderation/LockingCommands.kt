@@ -20,6 +20,7 @@ import dev.kord.core.behavior.channel.editRolePermission
 import dev.kord.core.behavior.edit
 import dev.kord.core.entity.channel.Channel
 import dev.kord.core.entity.channel.TextChannel
+import dev.kord.core.entity.channel.ThreadParentChannel
 import dev.kord.core.entity.channel.thread.TextChannelThread
 import kotlinx.datetime.Clock
 import org.hyacinthbots.lilybot.extensions.config.ConfigOptions
@@ -102,8 +103,8 @@ class LockingCommands : Extension() {
 						title = "Channel Locked"
 						description = "${targetChannel.mention} has been locked.\n\n**Reason:** ${arguments.reason}"
 						footer {
-							text = user.asUserOrNull()?.tag ?: "Unable to get tag"
-							icon = user.asUserOrNull()?.avatar?.url
+							text = user.asUserOrNull()?.username ?: "Unable to get username"
+							icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 						}
 						timestamp = Clock.System.now()
 						color = DISCORD_RED
@@ -157,8 +158,8 @@ class LockingCommands : Extension() {
 						title = "Server locked"
 						description = "**Reason:** ${arguments.reason}"
 						footer {
-							text = user.asUserOrNull()?.tag ?: "Unable to get user tag"
-							icon = user.asUserOrNull()?.avatar?.url
+							text = user.asUserOrNull()?.username ?: "Unable to get user username"
+							icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 						}
 						timestamp = Clock.System.now()
 						color = DISCORD_RED
@@ -241,8 +242,8 @@ class LockingCommands : Extension() {
 						title = "Channel Unlocked"
 						description = "${targetChannel.mention} has been unlocked."
 						footer {
-							text = user.asUserOrNull()?.tag ?: "Unable to get user tag"
-							icon = user.asUserOrNull()?.avatar?.url
+							text = user.asUserOrNull()?.username ?: "Unable to get user username"
+							icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 						}
 						timestamp = Clock.System.now()
 						color = DISCORD_GREEN
@@ -294,8 +295,8 @@ class LockingCommands : Extension() {
 					actionLog.createEmbed {
 						title = "Server unlocked"
 						footer {
-							text = user.asUserOrNull()?.tag ?: "Unable to get user tag"
-							icon = user.asUserOrNull()?.avatar?.url
+							text = user.asUserOrNull()?.username ?: "Unable to get user username"
+							icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 						}
 						timestamp = Clock.System.now()
 						color = DISCORD_GREEN
@@ -315,12 +316,12 @@ class LockingCommands : Extension() {
 	 * @since 4.8.0
 	 */
 	private suspend inline fun getChannelParent(channelArg: Channel?): TextChannel? {
-		var channelParent: TextChannel? = null
+		var channelParent: ThreadParentChannel? = null
 		if (channelArg is TextChannelThread) {
 			channelParent = channelArg.getParent()
 		}
 
-		return channelParent
+		return channelParent?.asChannelOfOrNull()
 	}
 
 	/**

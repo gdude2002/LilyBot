@@ -148,19 +148,6 @@ suspend inline fun CheckContext<*>.requiredConfigs(vararg configOptions: ConfigO
 				}
 			}
 
-			ConfigOptions.LOG_UPLOADS_ENABLED -> {
-				val utilityConfig = UtilityConfigCollection().getConfig(guildFor(event)!!.id)
-				if (utilityConfig == null) {
-					fail("Unable to access utility config for this guild! Please inform a member of staff.")
-					break
-				} else if (utilityConfig.disableLogUploading) {
-					fail("Log uploads are disabled for this guild!")
-					break
-				} else {
-					pass()
-				}
-			}
-
 			ConfigOptions.UTILITY_LOG -> {
 				val utilityConfig = UtilityConfigCollection().getConfig(guildFor(event)!!.id)
 				if (utilityConfig == null) {
@@ -185,7 +172,7 @@ suspend inline fun CheckContext<*>.requiredConfigs(vararg configOptions: ConfigO
  * @author NoComment1105
  * @since 3.2.0
  */
-suspend inline fun configIsUsable(option: ConfigOptions, guildId: Snowflake): Boolean {
+suspend inline fun configIsUsable(guildId: Snowflake, option: ConfigOptions): Boolean {
 	when (option) {
 		ConfigOptions.MODERATION_ENABLED -> return ModerationConfigCollection().getConfig(guildId)?.enabled ?: false
 
@@ -223,14 +210,28 @@ suspend inline fun configIsUsable(option: ConfigOptions, guildId: Snowflake): Bo
 			return loggingConfig.memberLog != null
 		}
 
-		ConfigOptions.LOG_UPLOADS_ENABLED -> {
-			val utilityConfig = UtilityConfigCollection().getConfig(guildId) ?: return false
-			return utilityConfig.disableLogUploading
-		}
-
 		ConfigOptions.UTILITY_LOG -> {
 			val utilityConfig = UtilityConfigCollection().getConfig(guildId) ?: return false
 			return utilityConfig.utilityLogChannel != null
 		}
 	}
+}
+
+/**
+ * Allows you to check if multiple configs are usable in a given guild. It will return a map containing the config and
+ * its "usability".
+ *
+ * @param guildId The ID of the guild to check hte configs for
+ * @param configs The [ConfigOptions] you wish to check
+ * @return A [Map] of [ConfigOptions] and [Boolean] based on whether the config is usable
+ * @since 4.8.1
+ */
+suspend inline fun configsAreUsable(guildId: Snowflake, vararg configs: ConfigOptions): Map<ConfigOptions, Boolean> {
+	val results = mutableMapOf<ConfigOptions, Boolean>()
+	configs.forEach {
+		val result = configIsUsable(guildId, it)
+		results[it] = result
+	}
+
+	return results
 }

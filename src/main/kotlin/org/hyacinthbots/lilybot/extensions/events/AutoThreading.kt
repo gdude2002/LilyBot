@@ -53,6 +53,7 @@ import org.hyacinthbots.lilybot.database.collections.ThreadsCollection
 import org.hyacinthbots.lilybot.database.entities.AutoThreadingData
 import org.hyacinthbots.lilybot.extensions.config.ConfigOptions
 import org.hyacinthbots.lilybot.utils.botHasChannelPerms
+import org.hyacinthbots.lilybot.utils.canPingRole
 import org.hyacinthbots.lilybot.utils.getLoggingChannelWithPerms
 
 class AutoThreading : Extension() {
@@ -90,7 +91,7 @@ class AutoThreading : Extension() {
 					}
 
 					// Check if the role can be pinged
-					if (arguments.role?.mentionable == false) {
+					if (!canPingRole(arguments.role, guild!!.id, this@unsafeSubCommand.kord)) {
 						ackEphemeral()
 						respondEphemeral {
 							content = "Lily cannot mention this role. Please fix the role's permissions and try again."
@@ -182,8 +183,8 @@ class AutoThreading : Extension() {
 							inline = message == null
 						}
 						footer {
-							text = user.asUser().tag
-							icon = user.asUser().avatar?.url
+							text = user.asUser().username
+							icon = user.asUser().avatar?.cdnUrl?.toUrl()
 						}
 						timestamp = Clock.System.now()
 						color = DISCORD_BLACK
@@ -234,8 +235,8 @@ class AutoThreading : Extension() {
 							inline = true
 						}
 						footer {
-							text = user.asUser().tag
-							icon = user.asUser().avatar?.url
+							text = user.asUser().username
+							icon = user.asUser().avatar?.cdnUrl?.toUrl()
 						}
 						timestamp = Clock.System.now()
 						color = DISCORD_BLACK
@@ -497,8 +498,11 @@ class AutoThreading : Extension() {
 		} else {
 			// Check the real message member too, despite the pk message not being null, we may still be able to use the original
 			message?.channel?.asChannelOfOrNull()
-				?: event.getGuild().getChannelOfOrNull(proxiedMessage.channel)
-				?: return
+				?: try {
+					event.getGuild().getChannelOfOrNull(proxiedMessage.channel)
+				} catch (_: IllegalArgumentException) {
+					null
+				} ?: return
 		}
 
 		val authorId: Snowflake = if (proxiedMessage == null) {
@@ -523,7 +527,11 @@ class AutoThreading : Extension() {
 			val ownerThreads = ThreadsCollection().getOwnerThreads(authorId)
 
 			ownerThreads.forEach {
-				val thread = event.guild?.getChannelOfOrNull<ThreadChannel>(it.threadId)
+				val thread = try {
+					event.guild?.getChannelOfOrNull<ThreadChannel>(it.threadId)
+				} catch (_: IllegalArgumentException) {
+					null
+				}
 				if (thread == null) {
 					ThreadsCollection().removeThread(it.threadId)
 				} else if (thread.parentId == channel.id && !thread.isArchived) {
@@ -545,9 +553,10 @@ class AutoThreading : Extension() {
 
 		val thread = channel.startPublicThreadWithMessage(
 			message?.id ?: proxiedMessage!!.channel,
-			threadName,
-			channel.data.defaultAutoArchiveDuration.value ?: ArchiveDuration.Day
-		)
+			threadName
+		) {
+			autoArchiveDuration = channel.data.defaultAutoArchiveDuration.value ?: ArchiveDuration.Day
+		}
 
 		ThreadsCollection().setThreadOwner(event.getGuild().id, thread.id, event.member!!.id, channel.id)
 

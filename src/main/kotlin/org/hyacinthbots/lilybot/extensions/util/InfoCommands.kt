@@ -13,8 +13,8 @@ import dev.kord.rest.builder.message.create.embed
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.hyacinthbots.lilybot.database.collections.UptimeCollection
-import org.hyacinthbots.lilybot.utils.BUILD_ID
-import org.hyacinthbots.lilybot.utils.LILY_VERSION
+import org.hyacinthbots.lilybot.internal.BuildInfo
+import org.hyacinthbots.lilybot.utils.HYACINTH_GITHUB
 
 /**
  * This class contains the info commands that allow users to get a better idea of how to use the bot.
@@ -40,7 +40,7 @@ class InfoCommands : Extension() {
 				respond {
 					embed {
 						thumbnail {
-							url = event.kord.getSelf().avatar!!.url
+							url = event.kord.getSelf().avatar?.cdnUrl!!.toUrl()
 						}
 						title = "What is LilyBot?"
 						description = "Lily is a FOSS multi-purpose bot for Discord created by " +
@@ -59,7 +59,7 @@ class InfoCommands : Extension() {
 							name = "What commands are there?"
 							value = "Lots! Too many to list here. You can read about the commands " +
 									"using the `/command-list` command, or visiting the [commands list on GitHub]" +
-									"(https://github.com/HyacinthBots/LilyBot/blob/main/docs/commands.md)."
+									"($HYACINTH_GITHUB/LilyBot/blob/main/docs/commands.md)."
 						}
 
 						field {
@@ -73,7 +73,7 @@ class InfoCommands : Extension() {
 							name = "Useful links"
 							value =
 								"Website: Coming Soon™️\n" +
-										"GitHub: https://github.com/HyacinthBots\n" +
+										"GitHub: ${HYACINTH_GITHUB}\n" +
 										"Buy Me a Coffee: https://buymeacoffee.com/HyacinthBots\n" +
 										"Twitter: https://twitter.com/HyacinthBots\n" +
 										"Email: `hyacinthbots@outlook.com`\n" +
@@ -102,7 +102,7 @@ class InfoCommands : Extension() {
 				respond {
 					embed {
 						thumbnail {
-							url = event.kord.getSelf().avatar!!.url
+							url = event.kord.getSelf().avatar?.cdnUrl!!.toUrl()
 						}
 						title = "Info about LilyBot"
 						description = "Lily is a FOSS multi-purpose bot for Discord created by " +
@@ -119,15 +119,16 @@ class InfoCommands : Extension() {
 									"We will also have domain costs for our website.\n\n" +
 									"Contributions of code & documentation are also incredibly appreciated, " +
 									"and you can read our [contributing guide]" +
-									"(https://github.com/HyacinthBots/LilyBot/blob/main/CONTRIBUTING.md) " +
+									"($HYACINTH_GITHUB/LilyBot/blob/main/CONTRIBUTING.md) " +
 									"or [development guide]" +
-									"(https://github.com/HyacinthBots/LilyBot/blob/main/docs/development-guide.md) " +
+									"($HYACINTH_GITHUB/LilyBot/blob/main/docs/development-guide.md) " +
 									"to get started."
 						}
 						field {
 							name = "Version"
+							// To avoid IntelliJ shouting about build errors, use https://plugins.jetbrains.com/plugin/9407-pebble
 							value =
-								"$LILY_VERSION ($BUILD_ID)"
+								"${BuildInfo.LILY_VERSION} (${BuildInfo.BUILD_ID})"
 							inline = true
 						}
 						field {
@@ -143,7 +144,7 @@ class InfoCommands : Extension() {
 							name = "Useful links"
 							value =
 								"Website: Coming Soon™️\n" +
-										"GitHub: https://github.com/HyacinthBots\n" +
+										"GitHub: ${HYACINTH_GITHUB}\n" +
 										"Buy Me a Coffee: https://buymeacoffee.com/HyacinthBots\n" +
 										"Twitter: https://twitter.com/HyacinthBots\n" +
 										"Email: `hyacinthbots@outlook.com`\n" +
@@ -194,11 +195,11 @@ suspend fun MessageCreateBuilder.buttons() {
 		}
 		linkButton {
 			label = "Privacy Policy"
-			url = "https://github.com/HyacinthBots/LilyBot/blob/main/docs/privacy-policy.md"
+			url = "$HYACINTH_GITHUB/LilyBot/blob/main/docs/privacy-policy.md"
 		}
 		linkButton {
 			label = "Terms of Service"
-			url = "https://github.com/HyacinthBots/.github/blob/main/terms-of-service.md"
+			url = "$HYACINTH_GITHUB/.github/blob/main/terms-of-service.md"
 		}
 	}
 }

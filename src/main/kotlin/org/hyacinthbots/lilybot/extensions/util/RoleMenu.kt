@@ -34,7 +34,7 @@ import dev.kord.core.behavior.edit
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.entity.Message
 import dev.kord.core.entity.Role
-import dev.kord.core.event.interaction.ButtonInteractionCreateEvent
+import dev.kord.core.event.interaction.GuildButtonInteractionCreateEvent
 import dev.kord.rest.builder.message.create.embed
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.toList
 import org.hyacinthbots.lilybot.database.collections.RoleMenuCollection
 import org.hyacinthbots.lilybot.database.collections.RoleSubscriptionCollection
 import org.hyacinthbots.lilybot.extensions.config.ConfigOptions
+import org.hyacinthbots.lilybot.utils.HYACINTH_GITHUB
 import org.hyacinthbots.lilybot.utils.botHasChannelPerms
 import org.hyacinthbots.lilybot.utils.getLoggingChannelWithPerms
 import org.hyacinthbots.lilybot.utils.utilsLogger
@@ -147,8 +148,8 @@ class RoleMenu : Extension() {
 								inline = true
 							}
 							footer {
-								text = "Created by ${user.asUserOrNull()?.tag}"
-								icon = user.asUserOrNull()?.avatar?.url
+								text = "Created by ${user.asUserOrNull()?.username}"
+								icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 							}
 						}
 						components {
@@ -223,8 +224,8 @@ class RoleMenu : Extension() {
 							description = "The ${arguments.role.mention} role was added to a role menu in " +
 									"${channel.mention}."
 							footer {
-								text = "Added by ${user.asUserOrNull()?.tag}"
-								icon = user.asUserOrNull()?.avatar?.url
+								text = "Added by ${user.asUserOrNull()?.username}"
+								icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 							}
 						}
 						components {
@@ -289,8 +290,8 @@ class RoleMenu : Extension() {
 							description = "The ${arguments.role.mention} role was removed from a role menu in " +
 									"${channel.mention}."
 							footer {
-								text = "Removed by ${user.asUserOrNull()?.tag}"
-								icon = user.asUserOrNull()?.avatar?.url
+								text = "Removed by ${user.asUserOrNull()?.username}"
+								icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 							}
 						}
 						components {
@@ -400,8 +401,8 @@ class RoleMenu : Extension() {
 							title = "Pronoun Role Menu Created"
 							description = "A pronoun role menu was created in ${channel.mention}."
 							footer {
-								text = "Created by ${user.asUserOrNull()?.tag}"
-								icon = user.asUserOrNull()?.avatar?.url
+								text = "Created by ${user.asUserOrNull()?.username}"
+								icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 							}
 						}
 						components {
@@ -418,7 +419,7 @@ class RoleMenu : Extension() {
 		/**
 		 * The button event that allows the user to select roles.
 		 */
-		event<ButtonInteractionCreateEvent> {
+		event<GuildButtonInteractionCreateEvent> {
 			check {
 				anyGuild()
 				failIfNot {
@@ -433,16 +434,16 @@ class RoleMenu : Extension() {
 					event.interaction.respondEphemeral {
 						content = "This role menu seems to be broken, please ask staff to recreate it. " +
 								"If this isn't a role menu, or if the issue persists, open a report at " +
-								"<https://github.com/HyacinthBots/LilyBot/issues>"
+								"<$HYACINTH_GITHUB/LilyBot/issues>"
 					}
 					return@Button
 				}
 
 				if (data.roles.isEmpty()) {
 					event.interaction.respondEphemeral {
-						content = "Could not find any roles associated with this menu. Please ask staff to add some " +
+						content = "Could not find any roles associated with this menu. Please ask staff to add some. " +
 								"If this isn't a role menu, or if the issue persists, open a report at " +
-								"<https://github.com/HyacinthBots/LilyBot/issues>"
+								"<$HYACINTH_GITHUB/LilyBot/issues>"
 					}
 					return@Button
 				}
@@ -451,7 +452,7 @@ class RoleMenu : Extension() {
 				if (guild == null) {
 					event.interaction.respondEphemeral {
 						content = "An error occurred getting when trying to get the server, please try again! If the " +
-								"problem persists, open a report at <https://github.com/HyacinthBots/LilyBot/issues>"
+								"problem persists, open a report at <$HYACINTH_GITHUB/LilyBot/issues>"
 					}
 					return@Button
 				}
@@ -466,12 +467,21 @@ class RoleMenu : Extension() {
 					}
 				}
 
+				if (roles.isEmpty()) {
+					event.interaction.respondEphemeral {
+						content = "Could not find any roles associated with this menu. Please ask staff to add some. " +
+								"If this isn't a role menu, or if the issue persists, open a report at " +
+								"<$HYACINTH_GITHUB/LilyBot/issues>"
+					}
+					return@Button
+				}
+
 				val guildRoles = guild.roles
 					.filter { role -> role.id in data.roles.map { it }.toList().associateBy { it } }
 					.toList()
 					.associateBy { it.id }
 				val member = event.interaction.user.asMemberOrNull(guild.id)
-				val userRoles = member?.roleIds?.filter { it in guildRoles.keys }
+				val userRoles = member.roleIds.filter { it in guildRoles.keys }
 
 				event.interaction.respondEphemeral {
 					content = "Use the menu below to select roles."
@@ -486,9 +496,7 @@ class RoleMenu : Extension() {
 									label = "@${it.name}",
 									value = it.id.toString()
 								) {
-									if (userRoles != null) {
-										default = it.id in userRoles
-									}
+									default = it.id in userRoles
 								}
 							}
 
@@ -497,7 +505,7 @@ class RoleMenu : Extension() {
 									.filter { it in guildRoles.keys }
 
 								if (event.interaction.values.isEmpty()) {
-									member?.edit {
+									member.edit {
 										roles.forEach {
 											member.removeRole(it.id)
 										}
@@ -506,26 +514,22 @@ class RoleMenu : Extension() {
 									return@SelectMenu
 								}
 
-								val rolesToAdd = if (userRoles != null) {
-									selectedRoles.filterNot { it in userRoles }
-								} else {
-									emptyList()
-								}
-								val rolesToRemove = userRoles?.filterNot { it in selectedRoles }
+								val rolesToAdd = selectedRoles.filterNot { it in userRoles }
+								val rolesToRemove = userRoles.filterNot { it in selectedRoles }
 
-								if (rolesToAdd.isEmpty() && rolesToRemove?.isEmpty() == true) {
+								if (rolesToAdd.isEmpty() && rolesToRemove.isEmpty()) {
 									respond {
 										content = "You didn't select any different roles, so no changes were made."
 									}
 									return@SelectMenu
 								}
 
-								member?.edit {
+								member.edit {
 									this@edit.roles = member.roleIds.toMutableSet()
 
 									// toSet() to increase performance. Idea advised this.
 									this@edit.roles!!.addAll(rolesToAdd.toSet())
-									rolesToRemove?.toSet()?.let { it1 -> this@edit.roles!!.removeAll(it1) }
+									this@edit.roles!!.removeAll(rolesToRemove.toSet())
 								}
 								respond { content = "Your roles have been adjusted." }
 							}
@@ -673,8 +677,8 @@ class RoleMenu : Extension() {
 						title = "Subscribable Role added"
 						description = "${arguments.role.mention} was added as a subscribable role"
 						footer {
-							text = "Added by ${user.asUserOrNull()?.tag}"
-							icon = user.asUserOrNull()?.avatar?.url
+							text = "Added by ${user.asUserOrNull()?.username}"
+							icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 						}
 					}
 				}
@@ -729,8 +733,8 @@ class RoleMenu : Extension() {
 						title = "Subscribable Role Removed"
 						description = "${arguments.role.mention} was removed as a subscribable role"
 						footer {
-							text = "Removed by ${user.asUserOrNull()?.tag}"
-							icon = user.asUserOrNull()?.avatar?.url
+							text = "Removed by ${user.asUserOrNull()?.username}"
+							icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 						}
 					}
 				}

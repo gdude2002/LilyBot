@@ -10,6 +10,7 @@ import com.kotlindiscord.kord.extensions.commands.converters.impl.coalescingOpti
 import com.kotlindiscord.kord.extensions.commands.converters.impl.optionalBoolean
 import com.kotlindiscord.kord.extensions.commands.converters.impl.optionalChannel
 import com.kotlindiscord.kord.extensions.commands.converters.impl.optionalRole
+import com.kotlindiscord.kord.extensions.commands.converters.impl.optionalString
 import com.kotlindiscord.kord.extensions.components.forms.ModalForm
 import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.extensions.ephemeralSlashCommand
@@ -79,6 +80,7 @@ class Config : Extension() {
 								null,
 								null,
 								null,
+								null,
 								null
 							)
 						)
@@ -99,7 +101,7 @@ class Config : Extension() {
 						return@action
 					}
 
-					if (!canPingRole(arguments.moderatorRole) && arguments.moderatorRole != null) {
+					if (!canPingRole(arguments.moderatorRole, guild!!.id, this@ephemeralSubCommand.kord)) {
 						respond {
 							content =
 								"I cannot use the role: ${arguments.moderatorRole!!.mention}, because it is not mentionable by " +
@@ -150,8 +152,12 @@ class Config : Extension() {
 								null -> "Disabled"
 							}
 						}
+						field {
+							name = "Ban DM Message"
+							value = arguments.banDmMessage ?: "No custom Ban DM message set"
+						}
 						footer {
-							text = "Configured by ${user.asUserOrNull()?.tag}"
+							text = "Configured by ${user.asUserOrNull()?.username}"
 						}
 					}
 
@@ -169,7 +175,8 @@ class Config : Extension() {
 							arguments.moderatorRole?.id,
 							arguments.quickTimeoutLength,
 							arguments.warnAutoPunishments,
-							arguments.logPublicly
+							arguments.logPublicly,
+							arguments.banDmMessage
 						)
 					)
 
@@ -331,8 +338,8 @@ class Config : Extension() {
 						}
 
 						footer {
-							text = "Configured by ${user.asUserOrNull()?.tag}"
-							icon = user.asUserOrNull()?.avatar?.url
+							text = "Configured by ${user.asUserOrNull()?.username}"
+							icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 						}
 					}
 
@@ -435,14 +442,6 @@ class Config : Extension() {
 					suspend fun EmbedBuilder.utilityEmbed() {
 						title = "Configuration: Utility"
 						field {
-							name = "Disable log uploading"
-							value = if (arguments.disableLogUploading) {
-								"True"
-							} else {
-								"false"
-							}
-						}
-						field {
 							name = "Utility Log"
 							value = if (arguments.utilityLogChannel != null) {
 								"${arguments.utilityLogChannel!!.mention} ${arguments.utilityLogChannel!!.data.name.value}"
@@ -452,8 +451,8 @@ class Config : Extension() {
 						}
 
 						footer {
-							text = "Configured by ${user.asUserOrNull()?.tag}"
-							icon = user.asUserOrNull()?.avatar?.url
+							text = "Configured by ${user.asUserOrNull()?.username}"
+							icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 						}
 					}
 
@@ -466,7 +465,6 @@ class Config : Extension() {
 					UtilityConfigCollection().setConfig(
 						UtilityConfigData(
 							guild!!.id,
-							arguments.disableLogUploading,
 							arguments.utilityLogChannel?.id
 						)
 					)
@@ -507,8 +505,8 @@ class Config : Extension() {
 									arguments.config.substring(1, arguments.config.length).lowercase()
 								}"
 								footer {
-									text = "Config cleared by ${user.asUserOrNull()?.tag}"
-									icon = user.asUserOrNull()?.avatar?.url
+									text = "Config cleared by ${user.asUserOrNull()?.username}"
+									icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 								}
 							}
 						}
@@ -530,8 +528,8 @@ class Config : Extension() {
 								embed {
 									title = "Config cleared: Moderation"
 									footer {
-										text = "Config cleared by ${user.asUserOrNull()?.tag}"
-										icon = user.asUserOrNull()?.avatar?.url
+										text = "Config cleared by ${user.asUserOrNull()?.username}"
+										icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 									}
 								}
 							}
@@ -552,8 +550,8 @@ class Config : Extension() {
 								embed {
 									title = "Config cleared: Logging"
 									footer {
-										text = "Config cleared by ${user.asUserOrNull()?.tag}"
-										icon = user.asUserOrNull()?.avatar?.url
+										text = "Config cleared by ${user.asUserOrNull()?.username}"
+										icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 									}
 								}
 							}
@@ -574,8 +572,8 @@ class Config : Extension() {
 								embed {
 									title = "Config cleared: Utility"
 									footer {
-										text = "Config cleared by ${user.asUserOrNull()?.tag}"
-										icon = user.asUserOrNull()?.avatar?.url
+										text = "Config cleared by ${user.asUserOrNull()?.username}"
+										icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 									}
 								}
 							}
@@ -589,8 +587,8 @@ class Config : Extension() {
 								embed {
 									title = "All configs cleared"
 									footer {
-										text = "Configs cleared by ${user.asUserOrNull()?.tag}"
-										icon = user.asUserOrNull()?.avatar?.url
+										text = "Configs cleared by ${user.asUserOrNull()?.username}"
+										icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 									}
 								}
 							}
@@ -645,6 +643,10 @@ class Config : Extension() {
 											false -> "Disabled"
 											null -> "Disabled"
 										}
+									}
+									field {
+										name = "Ban DM Message"
+										value = config.banDmMessage ?: "None"
 									}
 									timestamp = Clock.System.now()
 								}
@@ -713,10 +715,6 @@ class Config : Extension() {
 									title = "Current utility config"
 									description = "This is the current utility config for this guild"
 									field {
-										name = "Log uploading"
-										value = if (config.disableLogUploading) "Disabled" else "Enabled"
-									}
-									field {
 										name = "Channel"
 										value =
 											"${
@@ -763,6 +761,11 @@ class Config : Extension() {
 			name = "log-publicly"
 			description = "Whether to log moderation publicly or not."
 		}
+
+		val banDmMessage by optionalString {
+			name = "ban-dm-message"
+			description = "A custom message to send to users when they are banned."
+		}
 	}
 
 	inner class LoggingArgs : Arguments() {
@@ -804,10 +807,6 @@ class Config : Extension() {
 	}
 
 	inner class UtilityArgs : Arguments() {
-		val disableLogUploading by boolean {
-			name = "disable-log-uploading"
-			description = "Enable or disable log uploading for this guild"
-		}
 		val utilityLogChannel by optionalChannel {
 			name = "utility-log"
 			description = "The channel to log various utility actions too."

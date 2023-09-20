@@ -140,7 +140,7 @@ class PublicUtilities : Extension() {
 									field {
 										name = translate("extensions.public-utilities.nickname.userField")
 										value =
-											"${requester?.mention}\n${requester?.asUserOrNull()?.tag}\n${requester?.id}"
+											"${requester?.mention}\n${requester?.asUserOrNull()?.username}\n${requester?.id}"
 										inline = false
 									}
 
@@ -210,7 +210,7 @@ class PublicUtilities : Extension() {
 														name =
 															translate("extensions.public-utilities.nickname.userField")
 														value =
-															"${requester?.mention}\n${requester?.asUserOrNull()?.tag}\n" +
+															"${requester?.mention}\n${requester?.asUserOrNull()?.username}\n" +
 																	"${requester?.id}"
 														inline = false
 													}
@@ -233,9 +233,9 @@ class PublicUtilities : Extension() {
 													footer {
 														text = translate(
 															"extensions.public-utilities.nickname.request.logEmbed.accept.acceptedBy",
-															arrayOf(user.asUserOrNull()?.tag)
+															arrayOf(user.asUserOrNull()?.username)
 														)
-														icon = user.asUserOrNull()?.avatar?.url
+														icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 													}
 
 													timestamp = Clock.System.now()
@@ -270,7 +270,7 @@ class PublicUtilities : Extension() {
 														name =
 															translate("extensions.public-utilities.nickname.userField")
 														value = "${requester?.mention}\n" +
-																"${requester?.asUserOrNull()?.tag}\n${requester?.id}"
+																"${requester?.asUserOrNull()?.username}\n${requester?.id}"
 														inline = false
 													}
 
@@ -291,9 +291,9 @@ class PublicUtilities : Extension() {
 													footer {
 														text = translate(
 															"extensions.public-utilities.nickname.request.logEmbed.deny.deniedBy",
-															arrayOf(user.asUserOrNull()?.tag)
+															arrayOf(user.asUserOrNull()?.username)
 														)
-														icon = user.asUserOrNull()?.avatar?.url
+														icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 													}
 
 													timestamp = Clock.System.now()
@@ -343,7 +343,7 @@ class PublicUtilities : Extension() {
 
 							field {
 								name = translate("extensions.public-utilities.nickname.userField")
-								value = "${user.mention}\n${user.asUserOrNull()?.tag}\n${user.id}"
+								value = "${user.mention}\n${user.asUserOrNull()?.username}\n${user.id}"
 								inline = false
 							}
 
