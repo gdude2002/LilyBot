@@ -35,6 +35,7 @@ import org.hyacinthbots.lilybot.database.entities.LoggingConfigData
 import org.hyacinthbots.lilybot.database.entities.ModerationConfigData
 import org.hyacinthbots.lilybot.database.entities.PublicMemberLogData
 import org.hyacinthbots.lilybot.database.entities.UtilityConfigData
+import org.hyacinthbots.lilybot.utils.DEFAULT_BUNDLE_NAME
 import org.hyacinthbots.lilybot.utils.canPingRole
 import org.hyacinthbots.lilybot.utils.getLoggingChannelWithPerms
 import org.hyacinthbots.lilybot.utils.interval
@@ -42,16 +43,17 @@ import org.hyacinthbots.lilybot.utils.trimmedContents
 
 class Config : Extension() {
 	override val name: String = "config"
+	override val bundle: String = DEFAULT_BUNDLE_NAME
 
 	@OptIn(UnsafeAPI::class)
 	override suspend fun setup() {
 		ephemeralSlashCommand {
-			name = "config"
-			description = "Configure Lily's settings"
+			name = "extensions.config.config.name"
+			description = "extensions.config.config.description"
 
 			ephemeralSubCommand(::ModerationArgs) {
-				name = "moderation"
-				description = "Configure Lily's moderation system"
+				name = "extensions.config.config.moderation.name"
+				description = "extensions.config.config.moderation.description"
 
 				requirePermission(Permission.ManageGuild)
 
@@ -64,8 +66,7 @@ class Config : Extension() {
 					val moderationConfig = ModerationConfigCollection().getConfig(guild!!.id)
 					if (moderationConfig != null) {
 						respond {
-							content = "You already have a moderation configuration set. " +
-									"Please clear it before attempting to set a new one."
+							content = translate("extensions.config.config.configAlreadyExists", arrayOf("moderation"))
 						}
 						return@action
 					}
@@ -84,7 +85,7 @@ class Config : Extension() {
 							)
 						)
 						respond {
-							content = "Moderation system disabled."
+							content = translate("extensions.config.config.moderation.systemDisabled")
 						}
 						return@action
 					}
@@ -95,16 +96,17 @@ class Config : Extension() {
 					) {
 						respond {
 							content =
-								"You must set both the moderator role and the action log channel to use the moderation configuration."
+								translate("extensions.config.config.moderation.roleAndChannelRequired")
 						}
 						return@action
 					}
 
 					if (!canPingRole(arguments.moderatorRole, guild!!.id, this@ephemeralSubCommand.kord)) {
 						respond {
-							content =
-								"I cannot use the role: ${arguments.moderatorRole!!.mention}, because it is not mentionable by " +
-										"regular users. Please enable this in the role settings, or use a different role."
+							content = translate(
+								"extensions.config.config.moderation.roleNotPingable",
+								arrayOf(arguments.moderatorRole!!.mention)
+							)
 						}
 						return@action
 					}
@@ -114,49 +116,54 @@ class Config : Extension() {
 						modActionLog = guild!!.getChannelOfOrNull(arguments.modActionLog!!.id)
 						if (modActionLog?.botHasPermissions(Permission.ViewChannel, Permission.SendMessages) != true) {
 							respond {
-								content = "The mod action log you've selected is invalid, or I can't view it. " +
-										"Please attempt to resolve this and try again."
+								content =
+									translate("extensions.config.config.invalidChannel", arrayOf("mod action log"))
 							}
 							return@action
 						}
 					}
 
 					suspend fun EmbedBuilder.moderationEmbed() {
-						title = "Configuration: Moderation"
+						title = translate("extensions.config.config.configurationEmbed.title", arrayOf("Moderation"))
 						field {
-							name = "Moderators"
-							value = arguments.moderatorRole?.mention ?: "Disabled"
+							name = translate("extensions.config.config.moderation.embed.moderatorsField.name")
+							value = arguments.moderatorRole?.mention ?: translate("basic.disabled")
 						}
 						field {
-							name = "Action log"
-							value = arguments.modActionLog?.mention ?: "Disabled"
+							name = translate("extensions.config.config.moderation.embed.actionLogField.name")
+							value = arguments.modActionLog?.mention ?: translate("basic.disabled")
 						}
 						field {
-							name = "Log publicly"
+							name = translate("extensions.config.config.moderation.embed.logPubliclyField.name")
 							value = when (arguments.logPublicly) {
-								true -> "True"
-								false -> "Disabled"
-								null -> "Disabled"
+								true -> translate("basic.true")
+								false -> translate("basic.disabled")
+								null -> translate("basic.disabled")
 							}
 						}
 						field {
-							name = "Quick timeout length"
-							value = arguments.quickTimeoutLength.interval() ?: "No quick timeout length set"
+							name = translate("extensions.config.config.moderation.embed.quickTimeoutLength.name")
+							value = arguments.quickTimeoutLength.interval()
+								?: translate("extensions.config.config.moderation.embed.quickTimeoutLength.disabled")
 						}
 						field {
-							name = "Warning Auto-punishments"
+							name = translate("extensions.config.config.moderation.embed.warningAutoPunishments.name")
 							value = when (arguments.warnAutoPunishments) {
-								true -> "Enabled"
-								false -> "Disabled"
-								null -> "Disabled"
+								true -> translate("basic.true")
+								false -> translate("basic.disabled")
+								null -> translate("basic.disabled")
 							}
 						}
 						field {
-							name = "Ban DM Message"
-							value = arguments.banDmMessage ?: "No custom Ban DM message set"
+							name = translate("extensions.config.config.moderation.embed.banDmMessage.name")
+							value = arguments.banDmMessage
+								?: translate("extensions.config.config.moderation.embed.banDmMessage.disabled")
 						}
 						footer {
-							text = "Configured by ${user.asUserOrNull()?.username}"
+							text = translate(
+								"extensions.config.config.configuredBy",
+								arrayOf(user.asUserOrNull()?.username)
+							)
 						}
 					}
 
@@ -183,7 +190,7 @@ class Config : Extension() {
 
 					if (utilityLog == null) {
 						respond {
-							content = "Consider setting a utility config to log changes to configurations."
+							content = translate("extensions.config.config.considerUtility")
 						}
 						return@action
 					}
@@ -197,8 +204,8 @@ class Config : Extension() {
 			}
 
 			unsafeSubCommand(::LoggingArgs) {
-				name = "logging"
-				description = "Configure Lily's logging system"
+				name = "extensions.config.config.logging.name"
+				description = "extensions.config.config.logging.description"
 
 				initialResponse = InitialSlashCommandResponse.None
 
@@ -214,8 +221,7 @@ class Config : Extension() {
 					if (loggingConfig != null) {
 						ackEphemeral()
 						respondEphemeral {
-							content = "You already have a logging configuration set. " +
-									"Please clear it before attempting to set a new one."
+							content = translate("extensions.config.config.configAlreadyExists", arrayOf("logging"))
 						}
 						return@action
 					}
@@ -223,19 +229,19 @@ class Config : Extension() {
 					if (arguments.enableMemberLogging && arguments.memberLog == null) {
 						ackEphemeral()
 						respondEphemeral {
-							content = "You must specify a channel to log members joining and leaving to!"
+							content = translate("extensions.config.config.logging.memberMissing")
 						}
 						return@action
 					} else if ((arguments.enableMessageDeleteLogs || arguments.enableMessageEditLogs) &&
 						arguments.messageLogs == null
 					) {
 						ackEphemeral()
-						respondEphemeral { content = "You must specify a channel to log deleted/edited messages to!" }
+						respondEphemeral { content = translate("extensions.config.config.logging.editMissing") }
 						return@action
 					} else if (arguments.enablePublicMemberLogging && arguments.publicMemberLog == null) {
 						ackEphemeral()
 						respondEphemeral {
-							content = "You must specify a channel to publicly log members joining and leaving to!"
+							content = translate("extensions.config.config.logging.pubicMemberMissing")
 						}
 						return@action
 					}
@@ -246,8 +252,7 @@ class Config : Extension() {
 						if (memberLog?.botHasPermissions(Permission.ViewChannel, Permission.SendMessages) != true) {
 							ackEphemeral()
 							respondEphemeral {
-								content = "The member log you've selected is invalid, or I can't view it. " +
-										"Please attempt to resolve this and try again."
+								content = translate("extensions.config.config.invalidChannel", arrayOf("member log"))
 							}
 							return@action
 						}
@@ -259,8 +264,7 @@ class Config : Extension() {
 						if (messageLog?.botHasPermissions(Permission.ViewChannel, Permission.SendMessages) != true) {
 							ackEphemeral()
 							respondEphemeral {
-								content = "The message log you've selected is invalid, or I can't view it. " +
-										"Please attempt to resolve this and try again."
+								content = translate("extensions.config.config.invalidChannel", arrayOf("message log"))
 							}
 							return@action
 						}
@@ -276,68 +280,74 @@ class Config : Extension() {
 						) {
 							ackEphemeral()
 							respondEphemeral {
-								content = "The public member log you've selected is invalid, or I can't view it. " +
-										"Please attempt to resolve this and try again."
+								content =
+									translate("extensions.config.config.invalidChannel", arrayOf("public member log"))
 							}
 							return@action
 						}
 					}
 
 					suspend fun EmbedBuilder.loggingEmbed() {
-						title = "Configuration: Logging"
+						title = translate("extensions.config.config.configurationEmbed.title", arrayOf("Logging"))
 						field {
-							name = "Message Delete Logs"
+							name = translate("extensions.config.config.logging.embed.messageDeleteField.name")
 							value = if (arguments.enableMessageDeleteLogs && arguments.messageLogs != null) {
 								arguments.messageLogs!!.mention
 							} else {
-								"Disabled"
+								translate("basic.disabled")
 							}
 						}
 						field {
-							name = "Message Edit Logs"
+							name = translate("extensions.config.config.logging.embed.messageEditField.name")
 							value = if (arguments.enableMessageEditLogs && arguments.messageLogs != null) {
 								arguments.messageLogs!!.mention
 							} else {
-								"Disabled"
+								translate("basic.disabled")
 							}
 						}
 						field {
-							name = "Member Logs"
+							name = translate("extensions.config.config.logging.embed.memberField.name")
 							value = if (arguments.enableMemberLogging && arguments.memberLog != null) {
 								arguments.memberLog!!.mention
 							} else {
-								"Disabled"
+								translate("basic.disabled")
 							}
 						}
 
 						field {
-							name = "Public Member logs"
+							name = translate("extensions.config.config.logging.embed.publicMemberField.ane")
 							value = if (arguments.enablePublicMemberLogging && arguments.publicMemberLog != null) {
 								arguments.publicMemberLog!!.mention
 							} else {
-								"Disabled"
+								translate("basic.disabled")
 							}
 						}
 						if (arguments.enableMemberLogging && arguments.publicMemberLog != null) {
 							val config = LoggingConfigCollection().getConfig(guild!!.id)
 							if (config != null) {
 								field {
-									name = "Join Message"
+									name =
+										translate("extensions.config.config.logging.embed.publicMemberField.joinMessage.name")
 									value = config.publicMemberLogData?.joinMessage.trimmedContents(256)!!
 								}
 								field {
-									name = "Leave Message"
+									name =
+										translate("extensions.config.config.logging.embed.publicMemberField.leaveMessage.name")
 									value = config.publicMemberLogData?.leaveMessage.trimmedContents(256)!!
 								}
 								field {
-									name = "Ping on join"
+									name =
+										translate("extensions.config.config.logging.embed.publicMemberField.pingOnJoin.name")
 									value = config.publicMemberLogData?.pingNewUsers.toString()
 								}
 							}
 						}
 
 						footer {
-							text = "Configured by ${user.asUserOrNull()?.username}"
+							text = translate(
+								"extensions.config.config.configuredBy",
+								arrayOf(user.asUserOrNull()?.username)
+							)
 							icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 						}
 					}
@@ -391,7 +401,7 @@ class Config : Extension() {
 
 					if (utilityLog == null) {
 						respondEphemeral {
-							content = "Consider setting a utility config to log changes to configurations."
+							content = translate("extensions.config.config.considerUtility")
 						}
 						return@action
 					}
@@ -405,8 +415,8 @@ class Config : Extension() {
 			}
 
 			ephemeralSubCommand(::UtilityArgs) {
-				name = "utility"
-				description = "Configure Lily's utility settings"
+				name = "extensions.config.config.utility.name"
+				description = "extensions.config.config.utility.description"
 
 				requirePermission(Permission.ManageGuild)
 
@@ -420,8 +430,7 @@ class Config : Extension() {
 
 					if (utilityConfig != null) {
 						respond {
-							content = "You already have a utility configuration set. " +
-									"Please clear it before attempting to set a new one."
+							content = translate("extensions.config.config.configAlreadyExists", arrayOf("utility"))
 						}
 						return@action
 					}
@@ -431,26 +440,28 @@ class Config : Extension() {
 						utilityLog = guild!!.getChannelOfOrNull(arguments.utilityLogChannel!!.id)
 						if (utilityLog?.botHasPermissions(Permission.ViewChannel, Permission.SendMessages) != true) {
 							respond {
-								content = "The utility log you've selected is invalid, or I can't view it. " +
-										"Please attempt to resolve this and try again."
+								content = translate("extensions.config.config.invalidChannel", arrayOf("Utility Log"))
 							}
 							return@action
 						}
 					}
 
 					suspend fun EmbedBuilder.utilityEmbed() {
-						title = "Configuration: Utility"
+						title = translate("extensions.config.config.configurationEmbed.title", arrayOf("Utility"))
 						field {
-							name = "Utility Log"
+							name = translate("extensions.config.config.utility.embed.utilityField.name")
 							value = if (arguments.utilityLogChannel != null) {
 								"${arguments.utilityLogChannel!!.mention} ${arguments.utilityLogChannel!!.data.name.value}"
 							} else {
-								"Disabled"
+								translate("basic.disabled)")
 							}
 						}
 
 						footer {
-							text = "Configured by ${user.asUserOrNull()?.username}"
+							text = translate(
+								"extensions.config.config.configuredBy",
+								arrayOf(user.asUserOrNull()?.username)
+							)
 							icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 						}
 					}
@@ -477,8 +488,8 @@ class Config : Extension() {
 			}
 
 			ephemeralSubCommand(::ClearArgs) {
-				name = "clear"
-				description = "Clear a config type"
+				name = "extensions.config.config.clear.name"
+				description = "extensions.config.config.clear.description"
 
 				requirePermission(Permission.ManageGuild)
 
@@ -493,18 +504,29 @@ class Config : Extension() {
 
 						if (utilityLog == null) {
 							respond {
-								content = "Consider setting a utility config to log changes to configurations."
+								content = translate("extensions.config.config.considerUtility")
 							}
 							return
 						}
 
 						utilityLog.createMessage {
 							embed {
-								title = "Configuration Cleared: ${arguments.config[0]}${
-									arguments.config.substring(1, arguments.config.length).lowercase()
-								}"
+								title = translate(
+									"extensions.config.config.clear.embed.title",
+									arrayOf(
+										"${arguments.config[0]}${
+											arguments.config.substring(
+												1,
+												arguments.config.length
+											).lowercase()
+										}"
+									)
+								)
 								footer {
-									text = "Config cleared by ${user.asUserOrNull()?.username}"
+									text = translate(
+										"extensions.config.config.clear.footer",
+										arrayOf(user.asUserOrNull()?.username)
+									)
 									icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 								}
 							}
@@ -515,7 +537,8 @@ class Config : Extension() {
 						ConfigType.MODERATION.name -> {
 							ModerationConfigCollection().getConfig(guild!!.id) ?: run {
 								respond {
-									content = "No moderation configuration exists to clear!"
+									content =
+										translate("extensions.config.config.clear.noConfig", arrayOf("moderation"))
 								}
 								return@action
 							}
@@ -525,9 +548,13 @@ class Config : Extension() {
 							ModerationConfigCollection().clearConfig(guild!!.id)
 							respond {
 								embed {
-									title = "Config cleared: Moderation"
+									title =
+										translate("extensions.config.config.clear.embed.title", arrayOf("moderation"))
 									footer {
-										text = "Config cleared by ${user.asUserOrNull()?.username}"
+										text = translate(
+											"extensions.config.config.clear.footer",
+											arrayOf(user.asUserOrNull()?.username)
+										)
 										icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 									}
 								}
@@ -537,7 +564,7 @@ class Config : Extension() {
 						ConfigType.LOGGING.name -> {
 							LoggingConfigCollection().getConfig(guild!!.id) ?: run {
 								respond {
-									content = "No logging configuration exists to clear!"
+									content = translate("extensions.config.config.clear.noConfig", arrayOf("logging"))
 								}
 								return@action
 							}
@@ -547,9 +574,12 @@ class Config : Extension() {
 							LoggingConfigCollection().clearConfig(guild!!.id)
 							respond {
 								embed {
-									title = "Config cleared: Logging"
+									title = translate("extensions.config.config.clear.embed.title", arrayOf("logging"))
 									footer {
-										text = "Config cleared by ${user.asUserOrNull()?.username}"
+										text = translate(
+											"extensions.config.config.clear.footer",
+											arrayOf(user.asUserOrNull()?.username)
+										)
 										icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 									}
 								}
@@ -559,7 +589,7 @@ class Config : Extension() {
 						ConfigType.UTILITY.name -> {
 							UtilityConfigCollection().getConfig(guild!!.id) ?: run {
 								respond {
-									content = "No utility configuration exists to clear"
+									content = translate("extensions.config.config.clear.noConfig", arrayOf("utility"))
 								}
 								return@action
 							}
@@ -569,9 +599,12 @@ class Config : Extension() {
 							UtilityConfigCollection().clearConfig(guild!!.id)
 							respond {
 								embed {
-									title = "Config cleared: Utility"
+									title = translate("extensions.config.config.clear.embed.title", arrayOf("utility"))
 									footer {
-										text = "Config cleared by ${user.asUserOrNull()?.username}"
+										text = translate(
+											"extensions.config.config.clear.footer",
+											arrayOf(user.asUserOrNull()?.username)
+										)
 										icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 									}
 								}
@@ -584,9 +617,12 @@ class Config : Extension() {
 							UtilityConfigCollection().clearConfig(guild!!.id)
 							respond {
 								embed {
-									title = "All configs cleared"
+									title = translate("extensions.config.config.clear.all")
 									footer {
-										text = "Configs cleared by ${user.asUserOrNull()?.username}"
+										text = translate(
+											"extensions.config.config.clear.footer",
+											arrayOf(user.asUserOrNull()?.username)
+										)
 										icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
 									}
 								}
@@ -597,8 +633,8 @@ class Config : Extension() {
 			}
 
 			ephemeralSubCommand(::ViewArgs) {
-				name = "view"
-				description = "View the current config that you have set"
+				name = "extensions.config.config.view.name"
+				description = "extensions.config.config.view.description"
 
 				requirePermission(Permission.ManageGuild)
 
@@ -613,39 +649,51 @@ class Config : Extension() {
 							val config = ModerationConfigCollection().getConfig(guild!!.id)
 							if (config == null) {
 								respond {
-									content = "There is no moderation config for this guild"
+									content = translate("extensions.config.config.view.noConfig", arrayOf("moderation"))
 								}
 								return@action
 							}
 
 							respond {
 								embed {
-									title = "Current moderation config"
-									description = "This is the current moderation config for this guild"
+									title = translate(
+										"extensions.config.config.view.currentConfig.title",
+										arrayOf("moderation")
+									)
+									description = translate(
+										"extensions.config.config.view.currentConfig.description",
+										arrayOf("moderation")
+									)
 									field {
-										name = "Enabled/Disabled"
-										value = if (config.enabled) "Enabled" else "Disabled"
-									}
-									field {
-										name = "Moderators"
-										value = config.role?.let { guild!!.getRoleOrNull(it)?.mention } ?: "Disabled"
-									}
-									field {
-										name = "Action log"
+										name = "${translate("basic.enabled")}/${translate("basic.disabled")}"
 										value =
-											config.channel?.let { guild!!.getChannelOrNull(it)?.mention } ?: "Disabled"
+											if (config.enabled) translate("basic.enabled") else translate("basic.disabled")
 									}
 									field {
-										name = "Log publicly"
+										name =
+											translate("extensions.config.config.moderation.embed.moderatorsField.name")
+										value = config.role?.let { guild!!.getRoleOrNull(it)?.mention }
+											?: translate("basic.disabled")
+									}
+									field {
+										name =
+											translate("extensions.config.config.moderation.embed.actionLogField.name")
+										value =
+											config.channel?.let { guild!!.getChannelOrNull(it)?.mention }
+												?: translate("basic.disabled")
+									}
+									field {
+										name =
+											translate("extensions.config.config.moderation.embed.logPubliclyField.name")
 										value = when (config.publicLogging) {
-											true -> "True"
-											false -> "Disabled"
-											null -> "Disabled"
+											true -> translate("basic.true")
+											false -> translate("basic.disabled")
+											null -> translate("basic.disabled")
 										}
 									}
 									field {
-										name = "Ban DM Message"
-										value = config.banDmMessage ?: "None"
+										name = translate("extensions.config.config.moderation.embed.banDmMessage.name")
+										value = config.banDmMessage ?: translate("basic.none")
 									}
 									timestamp = Clock.System.now()
 								}
@@ -656,43 +704,50 @@ class Config : Extension() {
 							val config = LoggingConfigCollection().getConfig(guild!!.id)
 							if (config == null) {
 								respond {
-									content = "There is no logging config for this guild"
+									content = translate("extensions.config.config.view.noConfig", arrayOf("logging"))
 								}
 								return@action
 							}
 
 							respond {
 								embed {
-									title = "Current logging config"
-									description = "This is the current logging config for this guild"
+									title = translate(
+										"extensions.config.config.view.currentConfig.title",
+										arrayOf("logging")
+									)
+									description = translate(
+										"extensions.config.config.view.currentConfig.description",
+										arrayOf("logging")
+									)
 									field {
-										name = "Message delete logs"
+										name =
+											translate("extensions.config.config.logging.embed.messageDeleteField.name")
 										value = if (config.enableMessageDeleteLogs) {
-											"Enabled\n" +
-													"* ${guild!!.getChannelOrNull(config.messageChannel!!)?.mention ?: "Unable to get channel mention"} (" +
-													"${guild!!.getChannelOrNull(config.messageChannel)?.name ?: "Unable to get channel name"})"
+											"${translate("basic.enabled")}\n" +
+												"* ${guild!!.getChannelOrNull(config.messageChannel!!)?.mention ?: "Unable to get channel mention"} (" +
+												"${guild!!.getChannelOrNull(config.messageChannel)?.name ?: "Unable to get channel name"})"
 										} else {
-											"Disabled"
+											translate("basic.disabled")
 										}
 									}
 									field {
-										name = "Message edit logs"
+										name = translate("extensions.config.config.logging.embed.messageEditField.name")
 										value = if (config.enableMessageEditLogs) {
-											"Enabled\n" +
-													"* ${guild!!.getChannelOrNull(config.messageChannel!!)?.mention ?: "Unable to get channel mention"} (" +
-													"${guild!!.getChannelOrNull(config.messageChannel)?.name ?: "Unable to get channel mention"})"
+											"${translate("basic.enabled")}\n" +
+												"* ${guild!!.getChannelOrNull(config.messageChannel!!)?.mention ?: "Unable to get channel mention"} (" +
+												"${guild!!.getChannelOrNull(config.messageChannel)?.name ?: "Unable to get channel mention"})"
 										} else {
-											"Disabled"
+											translate("basic.disabled")
 										}
 									}
 									field {
-										name = "Member logs"
+										name = translate("extensions.config.config.logging.embed.memberField.name")
 										value = if (config.enableMemberLogs) {
-											"Enabled\n" +
-													"* ${guild!!.getChannelOrNull(config.memberLog!!)?.mention ?: "Unable to get channel mention"} (" +
-													"${guild!!.getChannelOrNull(config.memberLog)?.name ?: "Unable to get channel mention."})"
+											"${translate("basic.enabled")}\n" +
+												"* ${guild!!.getChannelOrNull(config.memberLog!!)?.mention ?: "Unable to get channel mention"} (" +
+												"${guild!!.getChannelOrNull(config.memberLog)?.name ?: "Unable to get channel mention."})"
 										} else {
-											"Disabled"
+											translate("basic.disabled")
 										}
 									}
 									timestamp = Clock.System.now()
@@ -704,20 +759,28 @@ class Config : Extension() {
 							val config = UtilityConfigCollection().getConfig(guild!!.id)
 							if (config == null) {
 								respond {
-									content = "There is no utility config for this guild"
+									content = translate("extensions.config.config.view.noConfig", arrayOf("utility"))
 								}
 								return@action
 							}
 
 							respond {
 								embed {
-									title = "Current utility config"
-									description = "This is the current utility config for this guild"
+									title = translate(
+										"extensions.config.config.view.currentConfig.title",
+										arrayOf("utility")
+									)
+									description = translate(
+										"extensions.config.config.view.currentConfig.description",
+										arrayOf("utility")
+									)
 									field {
-										name = "Channel"
+										name = translate("extensions.config.config.utility.embed.utilityField.name")
 										value =
 											"${
-												config.utilityLogChannel?.let { guild!!.getChannelOrNull(it)?.mention } ?: "None"
+												config.utilityLogChannel?.let { guild!!.getChannelOrNull(it)?.mention } ?: translate(
+													"basic.none"
+												)
 											} ${config.utilityLogChannel?.let { guild!!.getChannelOrNull(it)?.name } ?: ""}"
 									}
 									timestamp = Clock.System.now()
@@ -732,129 +795,129 @@ class Config : Extension() {
 
 	inner class ModerationArgs : Arguments() {
 		val enabled by boolean {
-			name = "enable-moderation"
-			description = "Whether to enable the moderation system"
+			name = "extensions.config.config.arguments.moderation.enabled.name"
+			description = "extensions.config.config.arguments.moderation.enabled.description"
 		}
 
 		val moderatorRole by optionalRole {
-			name = "moderator-role"
-			description = "The role of your moderators, used for pinging in message logs."
+			name = "extensions.config.config.arguments.moderatorRole.enabled.name"
+			description = "extensions.config.config.arguments.moderatorRole.enabled.description"
 		}
 
 		val modActionLog by optionalChannel {
-			name = "action-log"
-			description = "The channel used to store moderator actions."
+			name = "extensions.config.config.arguments.modActionLog.enabled.name"
+			description = "extensions.config.config.arguments.modActionLog.enabled.description"
 		}
 
 		val quickTimeoutLength by coalescingOptionalDuration {
-			name = "quick-timeout-length"
-			description = "The length of timeouts to use for quick timeouts"
+			name = "extensions.config.config.arguments.quickTimeout.enabled.name"
+			description = "extensions.config.config.arguments.quickTimeout.enabled.description"
 		}
 
 		val warnAutoPunishments by optionalBoolean {
-			name = "warn-auto-punishments"
-			description = "Whether to automatically punish users for reach a certain threshold on warns"
+			name = "extensions.config.config.arguments.auto-punish.enabled.name"
+			description = "extensions.config.config.arguments.auto-punish.enabled.description"
 		}
 
 		val logPublicly by optionalBoolean {
-			name = "log-publicly"
-			description = "Whether to log moderation publicly or not."
+			name = "extensions.config.config.arguments.logPublicly.enabled.name"
+			description = "extensions.config.config.arguments.logPublicly.enabled.description"
 		}
 
 		val banDmMessage by optionalString {
-			name = "ban-dm-message"
-			description = "A custom message to send to users when they are banned."
+			name = "extensions.config.config.arguments.banDm.enabled.name"
+			description = "extensions.config.config.arguments.banDm.enabled.description"
 		}
 	}
 
 	inner class LoggingArgs : Arguments() {
 		val enableMessageDeleteLogs by boolean {
-			name = "enable-delete-logs"
-			description = "Enable logging of message deletions"
+			name = "extensions.config.config.arguments.logging.enableDelete.name"
+			description = "extensions.config.config.arguments.logging.enableDelete.description"
 		}
 
 		val enableMessageEditLogs by boolean {
-			name = "enable-edit-logs"
-			description = "Enable logging of message edits"
+			name = "extensions.config.config.arguments.logging.enableEdit.name"
+			description = "extensions.config.config.arguments.logging.enableEdit.description"
 		}
 
 		val enableMemberLogging by boolean {
-			name = "enable-member-logging"
-			description = "Enable logging of members joining and leaving the guild"
+			name = "extensions.config.config.arguments.logging.enableMember.name"
+			description = "extensions.config.config.arguments.logging.enableMember.description"
 		}
 
 		val enablePublicMemberLogging by boolean {
-			name = "enable-public-member-logging"
+			name = "extensions.config.config.arguments.logging.enablePublicMember.name"
 			description =
-				"Enable logging of members joining and leaving the guild with a public message and ping if enabled"
+				"extensions.config.config.arguments.logging.enablePublicMember.description"
 		}
 
 		val messageLogs by optionalChannel {
-			name = "message-logs"
-			description = "The channel for logging message deletions"
+			name = "extensions.config.config.arguments.logging.messageLog.name"
+			description = "extensions.config.config.arguments.logging.messageLog.description"
 		}
 
 		val memberLog by optionalChannel {
-			name = "member-log"
-			description = "The channel for logging members joining and leaving the guild"
+			name = "extensions.config.config.arguments.logging.memberLog.name"
+			description = "extensions.config.config.arguments.logging.memberLog.description"
 		}
 
 		val publicMemberLog by optionalChannel {
-			name = "public-member-log"
-			description = "The channel for the public logging of members joining and leaving the guild"
+			name = "extensions.config.config.arguments.logging.publicMemberLog.name"
+			description = "extensions.config.config.arguments.logging.publicMemberLog.description"
 		}
 	}
 
 	inner class UtilityArgs : Arguments() {
 		val utilityLogChannel by optionalChannel {
-			name = "utility-log"
-			description = "The channel to log various utility actions too."
+			name = "extensions.config.config.arguments.utility.utilityLog.name"
+			description = "extensions.config.config.arguments.utility.utilityLog.description"
 		}
 	}
 
 	inner class ClearArgs : Arguments() {
 		val config by stringChoice {
-			name = "config-type"
-			description = "The type of config to clear"
+			name = "extensions.config.config.arguments.clear.name"
+			description = "extensions.config.config.arguments.clear.description"
 			choices = mutableMapOf(
-				"moderation" to ConfigType.MODERATION.name,
-				"logging" to ConfigType.LOGGING.name,
-				"utility" to ConfigType.UTILITY.name,
-				"all" to ConfigType.ALL.name
+				"extensions.config.config.arguments.clear.choice.moderation" to ConfigType.MODERATION.name,
+				"extensions.config.config.arguments.clear.choice.logging" to ConfigType.LOGGING.name,
+				"extensions.config.config.arguments.clear.choice.utility" to ConfigType.UTILITY.name,
+				"extensions.config.config.arguments.clear.choice.all" to ConfigType.ALL.name
 			)
 		}
 	}
 
 	inner class ViewArgs : Arguments() {
 		val config by stringChoice {
-			name = "config-type"
-			description = "The type of config to clear"
+			name = "extensions.config.config.arguments.clear.name"
+			description = "extensions.config.config.arguments.view.description"
 			choices = mutableMapOf(
-				"moderation" to ConfigType.MODERATION.name,
-				"logging" to ConfigType.LOGGING.name,
-				"utility" to ConfigType.UTILITY.name,
+				"extensions.config.config.arguments.clear.choice.moderation" to ConfigType.MODERATION.name,
+				"extensions.config.config.arguments.clear.choice.logging" to ConfigType.LOGGING.name,
+				"extensions.config.config.arguments.clear.choice.utility" to ConfigType.UTILITY.name,
 			)
 		}
 	}
 
 	inner class LoggingModal : ModalForm() {
-		override var title = "Public logging configuration"
+		override var title = "extensions.config.config.logging.modal.title"
 
 		val joinMessage = paragraphText {
-			label = "What would you like sent when a user joins"
-			placeholder = "Welcome to the server!"
+			label = "extensions.config.config.logging.modal.joinMessage.label"
+			placeholder = "extensions.config.config.logging.modal.joinMessage.placeholder"
 			required = true
 		}
 
 		val leaveMessage = paragraphText {
-			label = "What would you like sent when a user leaves"
-			placeholder = "Adiós amigo!"
+			label = "extensions.config.config.logging.modal.leaveMessage.label"
+			placeholder = "extensions.config.config.logging.modal.leaveMessage.placeholder"
 			required = true
 		}
 
 		val ping = lineText {
-			label = "Type `yes` to ping new users when they join"
-			placeholder = "Defaults to false if input is invalid or not `yes`"
+			label = "extensions.config.config.logging.modal.ping.label"
+			placeholder = "extensions.config.config.logging.modal.ping.placeholder"
 		}
 	}
 }

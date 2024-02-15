@@ -49,8 +49,8 @@ class PublicUtilities : Extension() {
 		 * @since 2.0
 		 */
 		publicSlashCommand {
-			name = "extensions.public-utilities.ping.name"
-			description = "extensions.public-utilities.ping.description"
+			name = "extensions.util.public-utilities.ping.name"
+			description = "extensions.util.public-utilities.ping.description"
 
 			action {
 				val averagePing = this@PublicUtilities.kord.gateway.averagePing
@@ -58,12 +58,12 @@ class PublicUtilities : Extension() {
 				respond {
 					embed {
 						color = DISCORD_YELLOW
-						title = translate("extensions.public-utilities.ping.title")
+						title = translate("extensions.util.public-utilities.ping.title")
 
 						timestamp = Clock.System.now()
 
 						field {
-							name = translate("extensions.public-utilities.pingEmbed.pingValue.title")
+							name = translate("extensions.util.public-utilities.pingEmbed.pingValue.title")
 							value = "**$averagePing**"
 							inline = true
 						}
@@ -78,12 +78,12 @@ class PublicUtilities : Extension() {
 		 * @since 3.1.0
 		 */
 		ephemeralSlashCommand {
-			name = "extensions.public-utilities.nickname.name"
-			description = "extensions.public-utilities.nickname.description"
+			name = "extensions.util.public-utilities.nickname.name"
+			description = "extensions.util.public-utilities.nickname.description"
 
 			ephemeralSubCommand(::NickRequestArgs) {
-				name = "extensions.public-utilities.nickname.request.name"
-				description = "extensions.public-utilities.nickname.request.description"
+				name = "extensions.util.public-utilities.nickname.request.name"
+				description = "extensions.util.public-utilities.nickname.request.description"
 
 				check {
 					anyGuild()
@@ -102,14 +102,14 @@ class PublicUtilities : Extension() {
 						self?.getTopRole()?.getPosition() == null
 					) {
 						respond {
-							content = translate("extensions.public-utilities.nickname.request.lilyNoRole.public")
+							content = translate("extensions.util.public-utilities.nickname.request.lilyNoRole.public")
 						}
 						return@action
 					} else if ((requesterAsMember?.getTopRole()?.getPosition() ?: 0) >
 						(self?.getTopRole()?.getPosition() ?: 0)
 					) {
 						respond {
-							content = translate("extensions.public-utilities.nickname.request.highestRole.public")
+							content = translate("extensions.util.public-utilities.nickname.request.highestRole.public")
 						}
 						return@action
 					}
@@ -117,26 +117,26 @@ class PublicUtilities : Extension() {
 					if (requesterAsMember?.hasPermission(Permission.ChangeNickname) == true) {
 						requesterAsMember.edit { nickname = arguments.newNick }
 						respond {
-							content = translate("extensions.public-utilities.nickname.request.hasPermission")
-							return@action
+							content = translate("extensions.util.public-utilities.nickname.request.hasPermission")
 						}
+						return@action
 					}
 
 					// Declare the embed outside the action to allow us to reference it inside the action
 					var actionLogEmbed: Message? = null
 
-					respond { content = translate("extensions.public-utilities.nickname.request.sent") }
+					respond { content = translate("extensions.util.public-utilities.nickname.request.sent") }
 
 					try {
 						actionLogEmbed =
 							utilityLog?.createMessage {
 								embed {
 									color = DISCORD_YELLOW
-									title = translate("extensions.public-utilities.nickname.request.requestEmbed.title")
+									title = translate("extensions.util.public-utilities.nickname.request.requestEmbed.title")
 									timestamp = Clock.System.now()
 
 									field {
-										name = translate("extensions.public-utilities.nickname.userField")
+										name = translate("extensions.util.public-utilities.nickname.userField")
 										value =
 											"${requester?.mention}\n${requester?.asUserOrNull()?.username}\n${requester?.id}"
 										inline = false
@@ -144,21 +144,21 @@ class PublicUtilities : Extension() {
 
 									field {
 										name =
-											translate("extensions.public-utilities.nickname.request.requestEmbed.currentNick")
+											translate("extensions.util.public-utilities.nickname.request.requestEmbed.currentNick")
 										value = "`${requesterAsMember?.nickname}`"
 										inline = false
 									}
 
 									field {
 										name =
-											translate("extensions.public-utilities.nickname.request.requestEmbed.requestedNick")
+											translate("extensions.util.public-utilities.nickname.request.requestEmbed.requestedNick")
 										value = "`${arguments.newNick}`"
 										inline = false
 									}
 								}
 								components {
 									ephemeralButton(row = 0) {
-										label = translate("extensions.public-utilities.nickname.request.button.accept")
+										label = translate("extensions.util.public-utilities.nickname.request.button.accept")
 										style = ButtonStyle.Success
 
 										action button@{
@@ -167,7 +167,7 @@ class PublicUtilities : Extension() {
 											) {
 												respond {
 													content =
-														translate("extensions.public-utilities.nickname.request.lilyNoRole.private")
+														translate("extensions.util.public-utilities.nickname.request.lilyNoRole.private")
 												}
 												return@button
 											} else if ((requesterAsMember?.getTopRole()?.getPosition() ?: 0) >
@@ -175,7 +175,7 @@ class PublicUtilities : Extension() {
 											) {
 												respond {
 													content =
-														translate("extensions.public-utilities.nickname.request.highestRole.private")
+														translate("extensions.util.public-utilities.nickname.request.highestRole.private")
 												}
 												return@button
 											}
@@ -185,11 +185,11 @@ class PublicUtilities : Extension() {
 											requester?.dm {
 												embed {
 													title = translate(
-														"extensions.public-utilities.nickname.request.dm.accept.title",
+														"extensions.util.public-utilities.nickname.request.dm.accept.title",
 														arrayOf(guild!!.asGuildOrNull()?.name)
 													)
 													description = translate(
-														"extensions.public-utilities.nickname.request.dm.accept.description",
+														"extensions.util.public-utilities.nickname.request.dm.accept.description",
 														arrayOf(requesterAsMember?.nickname, arguments.newNick)
 													)
 													color = DISCORD_GREEN
@@ -202,11 +202,11 @@ class PublicUtilities : Extension() {
 												embed {
 													color = DISCORD_GREEN
 													title =
-														translate("extensions.public-utilities.nickname.request.logEmbed.accept.title")
+														translate("extensions.util.public-utilities.nickname.request.logEmbed.accept.title")
 
 													field {
 														name =
-															translate("extensions.public-utilities.nickname.userField")
+															translate("extensions.util.public-utilities.nickname.userField")
 														value =
 															"${requester?.mention}\n${requester?.asUserOrNull()?.username}\n" +
 																	"${requester?.id}"
@@ -216,21 +216,21 @@ class PublicUtilities : Extension() {
 													// these two fields should be the same and exist as a sanity check
 													field {
 														name =
-															translate("extensions.public-utilities.nickname.request.logEmbed.accept.previousNick")
+															translate("extensions.util.public-utilities.nickname.request.logEmbed.accept.previousNick")
 														value = "`${requesterAsMember?.nickname}`"
 														inline = false
 													}
 
 													field {
 														name =
-															translate("extensions.public-utilities.nickname.request.logEmbed.accept.acceptedNick")
+															translate("extensions.util.public-utilities.nickname.request.logEmbed.accept.acceptedNick")
 														value = "`${arguments.newNick}`"
 														inline = false
 													}
 
 													footer {
 														text = translate(
-															"extensions.public-utilities.nickname.request.logEmbed.accept.acceptedBy",
+															"extensions.util.public-utilities.nickname.request.logEmbed.accept.acceptedBy",
 															arrayOf(user.asUserOrNull()?.username)
 														)
 														icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
@@ -243,16 +243,16 @@ class PublicUtilities : Extension() {
 									}
 
 									ephemeralButton(row = 0) {
-										label = translate("extensions.public-utilities.nickname.request.button.deny")
+										label = translate("extensions.util.public-utilities.nickname.request.button.deny")
 										style = ButtonStyle.Danger
 
 										action {
 											requester?.dm {
 												embed {
 													title =
-														translate("extensions.public-utilities.nickname.request.dm.deny.title")
+														translate("extensions.util.public-utilities.nickname.request.dm.deny.title")
 													description = translate(
-														"extensions.public-utilities.nickname.request.dm.deny.description",
+														"extensions.util.public-utilities.nickname.request.dm.deny.description",
 														arrayOf(arguments.newNick)
 													)
 												}
@@ -262,11 +262,11 @@ class PublicUtilities : Extension() {
 												components { removeAll() }
 												embed {
 													title =
-														translate("extensions.public-utilities.nickname.request.logEmbed.deny.title")
+														translate("extensions.util.public-utilities.nickname.request.logEmbed.deny.title")
 
 													field {
 														name =
-															translate("extensions.public-utilities.nickname.userField")
+															translate("extensions.util.public-utilities.nickname.userField")
 														value = "${requester?.mention}\n" +
 																"${requester?.asUserOrNull()?.username}\n${requester?.id}"
 														inline = false
@@ -274,21 +274,21 @@ class PublicUtilities : Extension() {
 
 													field {
 														name =
-															translate("extensions.public-utilities.nickname.request.logEmbed.deny.currentNick")
+															translate("extensions.util.public-utilities.nickname.request.logEmbed.deny.currentNick")
 														value = "`${requesterAsMember?.nickname}`"
 														inline = false
 													}
 
 													field {
 														name =
-															translate("extensions.public-utilities.nickname.request.logEmbed.deny.rejectedNick")
+															translate("extensions.util.public-utilities.nickname.request.logEmbed.deny.rejectedNick")
 														value = "`${arguments.newNick}`"
 														inline = false
 													}
 
 													footer {
 														text = translate(
-															"extensions.public-utilities.nickname.request.logEmbed.deny.deniedBy",
+															"extensions.util.public-utilities.nickname.request.logEmbed.deny.deniedBy",
 															arrayOf(user.asUserOrNull()?.username)
 														)
 														icon = user.asUserOrNull()?.avatar?.cdnUrl?.toUrl()
@@ -305,7 +305,7 @@ class PublicUtilities : Extension() {
 					} catch (e: KtorRequestException) {
 						// Avoid hard failing on permission error, since the public won't know what it means
 						respond {
-							content = translate("extensions.public-utilities.nickname.failToSend")
+							content = translate("extensions.util.public-utilities.nickname.failToSend")
 						}
 						return@action
 					}
@@ -313,8 +313,8 @@ class PublicUtilities : Extension() {
 			}
 
 			ephemeralSubCommand {
-				name = "extensions.public-utilities.nickname.clear.name"
-				description = "extensions.public-utilities.nickname.clear.description"
+				name = "extensions.util.public-utilities.nickname.clear.name"
+				description = "extensions.util.public-utilities.nickname.clear.description"
 
 				check {
 					anyGuild()
@@ -327,28 +327,28 @@ class PublicUtilities : Extension() {
 
 					// Check the user has a nickname to clear, avoiding errors and useless action-log notifications
 					if (user.fetchMember(guild!!.id).nickname == null) {
-						respond { content = translate("extensions.public-utilities.nickname.clear.nothingToClear") }
+						respond { content = translate("extensions.util.public-utilities.nickname.clear.nothingToClear") }
 						return@action
 					}
 
-					respond { content = translate("extensions.public-utilities.nickname.clear.cleared") }
+					respond { content = translate("extensions.util.public-utilities.nickname.clear.cleared") }
 
 					try {
 						utilityLog?.createEmbed {
-							title = translate("extensions.public-utilities.nickname.clear.logEmbed.title")
+							title = translate("extensions.util.public-utilities.nickname.clear.logEmbed.title")
 							color = DISCORD_YELLOW
 							timestamp = Clock.System.now()
 
 							field {
-								name = translate("extensions.public-utilities.nickname.userField")
+								name = translate("extensions.util.public-utilities.nickname.userField")
 								value = "${user.mention}\n${user.asUserOrNull()?.username}\n${user.id}"
 								inline = false
 							}
 
 							field {
-								name = translate("extensions.public-utilities.nickname.clear.newNickField.title")
+								name = translate("extensions.util.public-utilities.nickname.clear.newNickField.title")
 								value = translate(
-									"extensions.public-utilities.nickname.clear.newNickField.value",
+									"extensions.util.public-utilities.nickname.clear.newNickField.value",
 									arrayOf(user.asMemberOrNull(guild!!.id)?.nickname)
 								)
 								inline = false
@@ -357,7 +357,7 @@ class PublicUtilities : Extension() {
 					} catch (_: KtorRequestException) {
 						// Avoid hard failing on permission error, since the public won't know what it means
 						respond {
-							content = translate("extensions.public-utilities.nickname.failToSend")
+							content = translate("extensions.util.public-utilities.nickname.failToSend")
 						}
 						return@action
 					}
@@ -370,8 +370,8 @@ class PublicUtilities : Extension() {
 	inner class NickRequestArgs : Arguments() {
 		/** The new nickname that the command user requested. */
 		val newNick by string {
-			name = "extensions.public-utilities.nickname.request.args.newNick.name"
-			description = "extensions.public-utilities.nickname.request.args.newNick.description"
+			name = "extensions.util.public-utilities.nickname.request.args.newNick.name"
+			description = "extensions.util.public-utilities.nickname.request.args.newNick.description"
 
 			minLength = 1
 			maxLength = 32
