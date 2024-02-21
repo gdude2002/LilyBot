@@ -12,6 +12,7 @@ import com.kotlindiscord.kord.extensions.components.forms.ModalForm
 import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.extensions.ephemeralSlashCommand
 import com.kotlindiscord.kord.extensions.extensions.event
+import com.kotlindiscord.kord.extensions.i18n.TranslationsProvider
 import com.kotlindiscord.kord.extensions.modules.extra.pluralkit.api.PKMessage
 import com.kotlindiscord.kord.extensions.modules.extra.pluralkit.events.PKMessageCreateEvent
 import com.kotlindiscord.kord.extensions.modules.extra.pluralkit.events.ProxiedMessageCreateEvent
@@ -51,22 +52,24 @@ import org.hyacinthbots.lilybot.database.collections.ModerationConfigCollection
 import org.hyacinthbots.lilybot.database.collections.ThreadsCollection
 import org.hyacinthbots.lilybot.database.entities.AutoThreadingData
 import org.hyacinthbots.lilybot.extensions.config.ConfigOptions
+import org.hyacinthbots.lilybot.utils.DEFAULT_BUNDLE_NAME
 import org.hyacinthbots.lilybot.utils.botHasChannelPerms
 import org.hyacinthbots.lilybot.utils.canPingRole
 import org.hyacinthbots.lilybot.utils.getLoggingChannelWithPerms
 
 class AutoThreading : Extension() {
 	override val name = "auto-threading"
+	override val bundle = DEFAULT_BUNDLE_NAME
 
 	override suspend fun setup() {
 		ephemeralSlashCommand {
-			name = "auto-threading"
-			description = "The parent command for auto-threading management."
+			name = "extensions.events.autothreading.autothreading.name"
+			description = "extensions.events.autothreading.autothreading.description"
 
 			@OptIn(UnsafeAPI::class)
 			unsafeSubCommand(::AutoThreadingArgs) {
-				name = "enable"
-				description = "Automatically create a thread for each message sent in this channel."
+				name = "extensions.events.autothreading.autothreading.enable.name"
+				description = "extensions.events.autothreading.autothreading.enable.description"
 
 				initialResponse = InitialSlashCommandResponse.None
 
@@ -84,7 +87,7 @@ class AutoThreading : Extension() {
 					if (AutoThreadingCollection().getSingleAutoThread(channel.id) != null) {
 						ackEphemeral()
 						respondEphemeral {
-							content = "Auto-threading is already enabled for this channel."
+							content = translate("extensions.events.autothreading.autothreading.alreadyOn")
 						}
 						return@action
 					}
@@ -93,7 +96,7 @@ class AutoThreading : Extension() {
 					if (!canPingRole(arguments.role, guild!!.id, this@unsafeSubCommand.kord)) {
 						ackEphemeral()
 						respondEphemeral {
-							content = "Lily cannot mention this role. Please fix the role's permissions and try again."
+							content = translate("extensions.events.autothreading.autothreading.enable.noMention")
 						}
 						return@action
 					}
@@ -122,7 +125,7 @@ class AutoThreading : Extension() {
 					}
 
 					respondEphemeral {
-						content = "Auto-threading has been **enabled** in this channel."
+						content = translate("extensions.events.autothreading.autothreading.enable.enabled")
 					}
 
 					// Add the channel to the database as auto-threaded
@@ -144,40 +147,42 @@ class AutoThreading : Extension() {
 					val utilityLog = getLoggingChannelWithPerms(ConfigOptions.UTILITY_LOG, guild!!) ?: return@action
 
 					utilityLog.createEmbed {
-						title = "Auto-threading Enabled"
+						title = translate("extensions.events.autothreading.autothreading.enable.embed.title")
 						description = null
 						field {
-							name = "Channel:"
+							name = translate("extensions.events.autothreading.autothreading.enable.embed.channel")
 							value = channel.mention
 							inline = true
 						}
 						field {
-							name = "Role:"
+							name = translate("extensions.events.autothreading.autothreading.enable.embed.role")
 							value = arguments.role?.mention ?: "null"
 							inline = true
 						}
 						field {
-							name = "Prevent Duplicates:"
+							name =
+								translate("extensions.events.autothreading.autothreading.enable.embed.preventDuplicates")
 							value = arguments.preventDuplicates.toString()
 							inline = true
 						}
 						field {
-							name = "Begin Archived:"
+							name = translate("extensions.events.autothreading.autothreading.enable.embed.beginArchived")
 							value = arguments.archive.toString()
 							inline = true
 						}
 						field {
-							name = "Smart Naming Enabled:"
+							name = translate("extensions.events.autothreading.autothreading.enable.embed.smartNaming")
 							value = arguments.contentAwareNaming.toString()
 							inline = true
 						}
 						field {
-							name = "Mention:"
+							name = translate("extensions.events.autothreading.autothreading.enable.embed.mention")
 							value = arguments.mention.toString()
 							inline = true
 						}
 						field {
-							name = "Initial Message:"
+							name =
+								translate("extensions.events.autothreading.autothreading.enable.embed.initialMessage")
 							value = if (message != null) "```$message```" else "null"
 							inline = message == null
 						}
@@ -192,8 +197,8 @@ class AutoThreading : Extension() {
 			}
 
 			ephemeralSubCommand {
-				name = "disable"
-				description = "Stop automatically creating threads in this channel."
+				name = "extensions.events.autothreading.autothreading.disable.name"
+				description = "extensions.events.autothreading.autothreading.disable.description"
 
 				requirePermission(Permission.ManageChannels)
 
@@ -208,7 +213,7 @@ class AutoThreading : Extension() {
 					// Check if auto-threading is enabled
 					if (AutoThreadingCollection().getSingleAutoThread(channel.id) == null) {
 						respond {
-							content = "Auto-threading is not enabled for this channel."
+							content = translate("extensions.events.autothreading.autothreading.alreadyOff")
 						}
 						return@action
 					}
@@ -218,18 +223,18 @@ class AutoThreading : Extension() {
 
 					// Respond to the user
 					respond {
-						content = "Auto-threading has been **disabled** in this channel."
+						content = translate("extensions.events.autothreading.autothreading.disable.disabled")
 					}
 
 					// Log the change
 					val utilityLog = getLoggingChannelWithPerms(ConfigOptions.UTILITY_LOG, guild!!) ?: return@action
 
 					utilityLog.createEmbed {
-						title = "Auto-threading Disabled"
+						title = translate("extensions.events.autothreading.autothreading.disable.embed.title")
 						description = null
 
 						field {
-							name = "Channel:"
+							name = translate("extensions.events.autothreading.autothreading.disable.embed.channel")
 							value = channel.mention
 							inline = true
 						}
@@ -244,8 +249,8 @@ class AutoThreading : Extension() {
 			}
 
 			ephemeralSubCommand {
-				name = "list"
-				description = "List all the auto-threaded channels in this server, if any."
+				name = "extensions.events.autothreading.autothreading.list.name"
+				description = "extensions.events.autothreading.autothreading.list.description"
 
 				check {
 					anyGuild()
@@ -267,10 +272,11 @@ class AutoThreading : Extension() {
 					respond {
 						embed {
 							if (responseContent == null) {
-								title = "There are no auto-threaded channels in this guild."
-								description = "Add new ones by using `/auto-threading enable`"
+								title = translate("extensions.events.autothreading.autothreading.list.noChannels")
+								description =
+									translate("extensions.events.autothreading.autothreading.list.addNewChannels")
 							} else {
-								title = "Auto-threaded channels in this guild:"
+								title = translate("extensions.events.autothreading.autothreading.list.channelList")
 								description = responseContent.replace("null", "")
 							}
 						}
@@ -279,8 +285,8 @@ class AutoThreading : Extension() {
 			}
 
 			ephemeralSubCommand(::AutoThreadingViewArgs) {
-				name = "view"
-				description = "View the settings of an auto-threaded channel"
+				name = "extensions.events.autothreading.autothreading.view.name"
+				description = "extensions.events.autothreading.autothreading.view.description"
 
 				requirePermission(Permission.ManageChannels)
 
@@ -295,45 +301,54 @@ class AutoThreading : Extension() {
 					val autoThread = AutoThreadingCollection().getSingleAutoThread(arguments.channel.id)
 					if (autoThread == null) {
 						respond {
-							content = "**Error:** This is not an auto-threaded channel!"
+							content = translate("extensions.events.autothreading.autothreading.view.noThreaded")
 						}
 						return@action
 					}
 
 					respond {
 						embed {
-							title = "Auto-Threaded channel settings"
-							description = "These are the settings for channel: ${arguments.channel.mention}"
+							title = translate("extensions.events.autothreading.autothreading.view.embed.title")
+							description = translate(
+								"extensions.events.autothreading.autothreading.view.embed.description",
+								arrayOf(arguments.channel.mention)
+							)
 							field {
-								name = "Ping role"
+								name = translate("extensions.events.autothreading.autothreading.view.embed.role")
 								value = if (autoThread.roleId != null) {
-									guild!!.getRoleOrNull(autoThread.roleId)?.mention ?: "Unable to get role!"
+									guild!!.getRoleOrNull(autoThread.roleId)?.mention
+										?: translate("extensions.events.autothreading.autothreading.view.embed.unable")
 								} else {
-									"None"
+									translate("basic.none")
 								}
 							}
 							field {
-								name = "Prevent duplicates"
+								name =
+									translate("extensions.events.autothreading.autothreading.view.embed.preventDuplicates")
 								value = autoThread.preventDuplicates.toString()
 							}
 							field {
-								name = "Archive on creation"
+								name =
+									translate("extensions.events.autothreading.autothreading.view.embed.archiveOnStart")
 								value = autoThread.archive.toString()
 							}
 							field {
-								name = "Content aware naming"
+								name =
+									translate("extensions.events.autothreading.autothreading.view.embed.contentAwareNaming")
 								value = autoThread.contentAwareNaming.toString()
 							}
 							field {
-								name = "Mention creator on creation"
+								name =
+									translate("extensions.events.autothreading.autothreading.view.embed.mentionCreator")
 								value = autoThread.mention.toString()
 							}
 							field {
-								name = "Creation message"
-								value = autoThread.creationMessage ?: "Default"
+								name =
+									translate("extensions.events.autothreading.autothreading.view.embed.creationMessage")
+								value = autoThread.creationMessage ?: translate("basic.default")
 							}
 							field {
-								name = "Add mods and ping role"
+								name = translate("extensions.events.autothreading.autothreading.view.embed.addMods")
 								value = autoThread.addModsAndRole.toString()
 							}
 						}
@@ -347,22 +362,22 @@ class AutoThreading : Extension() {
 				anyGuild()
 				failIf {
 					event.pkMessage.sender == kord.selfId ||
-							listOf(
-								MessageType.ChatInputCommand,
-								MessageType.ThreadCreated,
-								MessageType.ThreadStarterMessage
-							).contains(event.message.type) ||
-							listOf(
-								ChannelType.GuildNews,
-								ChannelType.GuildVoice,
-								ChannelType.PublicGuildThread,
-								ChannelType.PublicNewsThread
-							).contains(event.message.getChannelOrNull()?.type)
+						listOf(
+							MessageType.ChatInputCommand,
+							MessageType.ThreadCreated,
+							MessageType.ThreadStarterMessage
+						).contains(event.message.type) ||
+						listOf(
+							ChannelType.GuildNews,
+							ChannelType.GuildVoice,
+							ChannelType.PublicGuildThread,
+							ChannelType.PublicNewsThread
+						).contains(event.message.getChannelOrNull()?.type)
 				}
 			}
 
 			action {
-				onMessageSend(event, event.getMessageOrNull(), event.pkMessage)
+				onMessageSend(event, getTranslationProvider(), event.getMessageOrNull(), event.pkMessage)
 			}
 		}
 
@@ -371,22 +386,22 @@ class AutoThreading : Extension() {
 				anyGuild()
 				failIf {
 					event.message.author?.id == kord.selfId ||
-							listOf(
-								MessageType.ChatInputCommand,
-								MessageType.ThreadCreated,
-								MessageType.ThreadStarterMessage
-							).contains(event.message.type) ||
-							listOf(
-								ChannelType.GuildNews,
-								ChannelType.GuildVoice,
-								ChannelType.PublicGuildThread,
-								ChannelType.PublicNewsThread
-							).contains(event.message.getChannelOrNull()?.type)
+						listOf(
+							MessageType.ChatInputCommand,
+							MessageType.ThreadCreated,
+							MessageType.ThreadStarterMessage
+						).contains(event.message.type) ||
+						listOf(
+							ChannelType.GuildNews,
+							ChannelType.GuildVoice,
+							ChannelType.PublicGuildThread,
+							ChannelType.PublicNewsThread
+						).contains(event.message.getChannelOrNull()?.type)
 				}
 			}
 
 			action {
-				onMessageSend(event, event.getMessageOrNull())
+				onMessageSend(event, getTranslationProvider(), event.getMessageOrNull())
 			}
 		}
 
@@ -395,7 +410,7 @@ class AutoThreading : Extension() {
 				anyGuild()
 				failIf {
 					event.channel.ownerId == kord.selfId ||
-							event.channel.member != null
+						event.channel.member != null
 				}
 			}
 
@@ -418,60 +433,60 @@ class AutoThreading : Extension() {
 
 	inner class AutoThreadingArgs : Arguments() {
 		val role by optionalRole {
-			name = "role"
-			description = "The role, if any, to invite to threads created in this channel."
+			name = "extensions.events.autothreading.autothreading.arguments.role.name"
+			description = "extensions.events.autothreading.autothreading.arguments.role.description"
 		}
 
 		val addModsAndRole by defaultingBoolean {
-			name = "add-mods-and-role"
-			description = "Whether to add moderators to the thread alongside the role"
+			name = "extensions.events.autothreading.autothreading.arguments.addMods.name"
+			description = "extensions.events.autothreading.autothreading.arguments.addMods.description"
 			defaultValue = false
 		}
 
 		val preventDuplicates by defaultingBoolean {
-			name = "prevent-duplicates"
-			description = "If users should be stopped from having multiple open threads in this channel. Default false."
+			name = "extensions.events.autothreading.autothreading.arguments.preventDuplicates.name"
+			description = "extensions.events.autothreading.autothreading.arguments.preventDuplicates.description"
 			defaultValue = false
 		}
 
 		val archive by defaultingBoolean {
-			name = "archive"
-			description = "If threads should be archived on creation to avoid filling the sidebar. Default false."
+			name = "extensions.events.autothreading.autothreading.arguments.archive.name"
+			description = "extensions.events.autothreading.autothreading.arguments.archive.description"
 			defaultValue = false
 		}
 
 		val contentAwareNaming by defaultingBoolean {
-			name = "content-aware-naming"
-			description = "If Lily should use content-aware thread titles. Default false"
+			name = "extensions.events.autothreading.autothreading.arguments.contentAware.name"
+			description = "extensions.events.autothreading.autothreading.arguments.contentAware.description"
 			defaultValue = false
 		}
 
 		val mention by defaultingBoolean {
-			name = "mention"
-			description = "If the creator should be mentioned in new threads in this channel. Default false."
+			name = "extensions.events.autothreading.autothreading.arguments.mention.name"
+			description = "extensions.events.autothreading.autothreading.arguments.mention.description"
 			defaultValue = false
 		}
 
 		val message by defaultingBoolean {
-			name = "message"
-			description = "Whether to send a custom message on thread creation or not. Default false."
+			name = "extensions.events.autothreading.autothreading.arguments.message.name"
+			description = "extensions.events.autothreading.autothreading.arguments.message.description"
 			defaultValue = false
 		}
 	}
 
 	inner class AutoThreadingViewArgs : Arguments() {
 		val channel by channel {
-			name = "channel"
-			description = "The channel to view the auto-threading settings for."
+			name = "extensions.events.autothreading.autothreading.arguments.channel.name"
+			description = "extensions.events.autothreading.autothreading.arguments.channel.description"
 		}
 	}
 
 	inner class MessageModal : ModalForm() {
-		override var title = "Thread Creation Message Configuration"
+		override var title = "extensions.events.autothreading.autothreading.modal.title"
 
 		val msgInput = paragraphText {
-			label = "Thread Creation Message"
-			placeholder = "Input the content of the message to send when a thread is created in this channel"
+			label = "extensions.events.autothreading.autothreading.modal.msgInput.name"
+			placeholder = "extensions.events.autothreading.autothreading.modal.msgInput.placeholder"
 			required = true
 		}
 	}
@@ -487,6 +502,7 @@ class AutoThreading : Extension() {
 	 */
 	private suspend fun <T : PKMessageCreateEvent> onMessageSend(
 		event: T,
+		provider: TranslationsProvider,
 		message: Message?,
 		proxiedMessage: PKMessage? = null
 	) {
@@ -515,7 +531,7 @@ class AutoThreading : Extension() {
 		var threadName: String? = event.message.content.trim().split("\n").firstOrNull()?.take(75)
 
 		if (!options.contentAwareNaming || threadName == null) {
-			threadName = "Thread for ${
+			threadName = "${provider.translate("extensions.events.autothreading.autothreading.threadFor")} ${
 				message?.author?.asUser()?.username ?: proxiedMessage?.member?.name
 			}".take(75)
 		}
@@ -542,7 +558,11 @@ class AutoThreading : Extension() {
 			if (previousThreadExists) {
 				val response = event.message.respond {
 					// There is a not-null call because the compiler knows it's not null if the boolean is true.
-					content = "Please use your existing thread in this channel ${previousUserThread!!.mention}"
+					content = provider.translate(
+						"extensions.events.autothreading.autothreading.existingThread",
+						DEFAULT_BUNDLE_NAME,
+						arrayOf(previousUserThread!!.mention)
+					)
 				}
 				event.message.delete("User already has a thread")
 				response.delete(10000L, false)

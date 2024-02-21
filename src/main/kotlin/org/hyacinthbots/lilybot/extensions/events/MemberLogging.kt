@@ -18,6 +18,7 @@ import dev.kord.rest.builder.message.embed
 import kotlinx.datetime.Clock
 import org.hyacinthbots.lilybot.database.collections.LoggingConfigCollection
 import org.hyacinthbots.lilybot.extensions.config.ConfigOptions
+import org.hyacinthbots.lilybot.utils.DEFAULT_BUNDLE_NAME
 import org.hyacinthbots.lilybot.utils.getLoggingChannelWithPerms
 import org.hyacinthbots.lilybot.utils.getMemberCount
 import org.hyacinthbots.lilybot.utils.requiredConfigs
@@ -30,6 +31,7 @@ import org.hyacinthbots.lilybot.utils.requiredConfigs
  */
 class MemberLogging : Extension() {
 	override val name = "member-logging"
+	override val bundle = DEFAULT_BUNDLE_NAME
 
 	override suspend fun setup() {
 		/** Create an embed in the join channel on user join */
@@ -45,23 +47,26 @@ class MemberLogging : Extension() {
 
 				memberLog?.createEmbed {
 					author {
-						name = "User joined the server!"
+						name = translate("extensions.events.memberlogging.memberjoinevent.embed.author")
 						icon = event.member.avatar?.cdnUrl?.toUrl()
 					}
 					field {
-						name = "Welcome:"
+						name = translate("extensions.events.memberlogging.memberjoinevent.embed.welcome")
 						value = "${event.member.mention} (${event.member.username})"
 						inline = true
 					}
 					field {
-						name = "ID:"
+						name = translate("extensions.events.memberlogging.memberevent.embed.id")
 						value = event.member.id.toString()
 						inline = false
 					}
 					timestamp = Clock.System.now()
 					color = DISCORD_GREEN
 					footer {
-						text = "Member count: ${event.guild.getMemberCount()}"
+						text = translate(
+							"extensions.events.memberlogging.memberjoinevent.footer",
+							arrayOf(event.guild.getMemberCount())
+						)
 					}
 				}
 
@@ -76,19 +81,25 @@ class MemberLogging : Extension() {
 						if (config.publicMemberLogData?.pingNewUsers == true) content = event.member.mention
 						embed {
 							author {
-								name = "Welcome ${event.member.username}"
+								name = translate(
+									"extensions.events.memberlogging.memberjoinevent.publicEmbed.author",
+									arrayOf(event.member.username)
+								)
 								icon = event.member.avatar?.cdnUrl?.toUrl()
 							}
 							description = if (config.publicMemberLogData?.joinMessage != null) {
 								config.publicMemberLogData.joinMessage
 							} else {
-								"Welcome to the server!"
+								translate("extensions.events.memberlogging.memberjoinevent.publicEmbed.welcomeMessage")
 							}
 							timestamp = Clock.System.now()
 							color = DISCORD_GREEN
 							footer {
 								text =
-									"Member count: ${event.guild.getMemberCount()}"
+									translate(
+										"extensions.events.memberlogging.memberevent.footer",
+										arrayOf(event.guild.getMemberCount())
+									)
 							}
 						}
 					}
@@ -109,22 +120,25 @@ class MemberLogging : Extension() {
 
 				memberLog?.createEmbed {
 					author {
-						name = "User left the server!"
+						name = translate("extensions.events.memberlogging.memberleaveevent.embed.author")
 						icon = event.user.avatar?.cdnUrl?.toUrl()
 					}
 					field {
-						name = "Goodbye:"
+						name = translate("extensions.events.memberlogging.memberleaveevent.embed.goodbye")
 						value = event.user.username
 						inline = true
 					}
 					field {
-						name = "ID:"
+						name = translate("extensions.events.memberlogging.memberevent.embed.id")
 						value = event.user.id.toString()
 					}
 					timestamp = Clock.System.now()
 					color = DISCORD_RED
 					footer {
-						text = "Member count: ${event.guild.getMemberCount()}"
+						text = translate(
+							"extensions.events.memberlogging.memberjoinevent.footer",
+							arrayOf(event.guild.getMemberCount())
+						)
 					}
 				}
 
@@ -137,18 +151,24 @@ class MemberLogging : Extension() {
 
 					publicLog?.createEmbed {
 						author {
-							name = "Goodbye ${event.user.username}"
+							name = translate(
+								"extensions.events.memberlogging.memberleaveevent.publicEmbed.author",
+								arrayOf(event.user.username)
+							)
 							icon = event.user.avatar?.cdnUrl?.toUrl()
 						}
 						description = if (config.publicMemberLogData?.leaveMessage != null) {
 							config.publicMemberLogData.leaveMessage
 						} else {
-							"Farewell!"
+							translate("extensions.events.memberlogging.memberleaveevent.publicEmbed.goodbyeMessage")
 						}
 						timestamp = Clock.System.now()
 						color = DISCORD_RED
 						footer {
-							text = "Member count: ${event.guild.getMemberCount()}"
+							text = translate(
+								"extensions.events.memberlogging.memberjoinevent.footer",
+								arrayOf(event.guild.getMemberCount())
+							)
 						}
 					}
 				}

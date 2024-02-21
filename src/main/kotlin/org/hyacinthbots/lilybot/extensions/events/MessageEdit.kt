@@ -6,6 +6,7 @@ import com.kotlindiscord.kord.extensions.components.components
 import com.kotlindiscord.kord.extensions.components.linkButton
 import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.extensions.event
+import com.kotlindiscord.kord.extensions.i18n.TranslationsProvider
 import com.kotlindiscord.kord.extensions.modules.extra.pluralkit.api.PKMessage
 import com.kotlindiscord.kord.extensions.modules.extra.pluralkit.events.ProxiedMessageUpdateEvent
 import com.kotlindiscord.kord.extensions.modules.extra.pluralkit.events.UnProxiedMessageUpdateEvent
@@ -17,6 +18,7 @@ import dev.kord.core.entity.channel.GuildMessageChannel
 import dev.kord.rest.builder.message.embed
 import kotlinx.datetime.Clock
 import org.hyacinthbots.lilybot.extensions.config.ConfigOptions
+import org.hyacinthbots.lilybot.utils.DEFAULT_BUNDLE_NAME
 import org.hyacinthbots.lilybot.utils.attachmentsAndProxiedMessageInfo
 import org.hyacinthbots.lilybot.utils.getLoggingChannelWithPerms
 import org.hyacinthbots.lilybot.utils.ifNullOrEmpty
@@ -29,6 +31,7 @@ import org.hyacinthbots.lilybot.utils.trimmedContents
  */
 class MessageEdit : Extension() {
 	override val name = "message-edit"
+	override val bundle = DEFAULT_BUNDLE_NAME
 
 	override suspend fun setup() {
 		/**
@@ -46,7 +49,7 @@ class MessageEdit : Extension() {
 				}
 			}
 			action {
-				onMessageEdit(event.getMessageOrNull(), event.old, null)
+				onMessageEdit(translationsProvider, event.getMessageOrNull(), event.old, null)
 			}
 		}
 
@@ -64,7 +67,7 @@ class MessageEdit : Extension() {
 				}
 			}
 			action {
-				onMessageEdit(event.getMessageOrNull(), event.old, event.pkMessage)
+				onMessageEdit(translationsProvider, event.getMessageOrNull(), event.old, event.pkMessage)
 			}
 		}
 	}
@@ -72,12 +75,18 @@ class MessageEdit : Extension() {
 	/**
 	 * If message logging is enabled, sends an embed describing the message edit to the guild's message log channel.
 	 *
+	 * @param provider The translation provider for the extension
 	 * @param message The current message
 	 * @param old The original message
 	 * @param proxiedMessage Extra data for PluralKit proxied messages
 	 * @author trainb0y
 	 */
-	private suspend fun onMessageEdit(message: Message?, old: Message?, proxiedMessage: PKMessage?) {
+	private suspend fun onMessageEdit(
+		provider: TranslationsProvider,
+		message: Message?,
+		old: Message?,
+		proxiedMessage: PKMessage?
+	) {
 		message ?: return
 		val guild = message.getGuildOrNull() ?: return
 
@@ -87,30 +96,37 @@ class MessageEdit : Extension() {
 			embed {
 				color = DISCORD_YELLOW
 				author {
-					name = "Message Edited"
+					name = provider.translate("extensions.events.messageedit.embed.author")
 					icon = proxiedMessage?.member?.avatarUrl ?: message.author?.avatar?.cdnUrl?.toUrl()
 				}
-				description =
-					"Location: ${message.channel.mention} " +
-							"(${message.channel.asChannelOfOrNull<GuildMessageChannel>()?.name
-								?: "Could not get channel name"})"
+				description = provider.translate(
+					"extensions.events.messageevent.location",
+					DEFAULT_BUNDLE_NAME,
+					arrayOf(
+						message.channel.mention,
+						message.channel.asChannelOfOrNull<GuildMessageChannel>()?.name
+							?: provider.translate("extensions.events.messagedelete.noChannelName")
+					)
+				)
 				timestamp = Clock.System.now()
 
 				field {
-					name = "Previous contents"
-					value = old?.trimmedContents().ifNullOrEmpty { "Failed to retrieve previous message contents" }
+					name = provider.translate("extensions.events.messageedit.embed.previous")
+					value = old?.trimmedContents()
+						.ifNullOrEmpty { provider.translate("extensions.events.messageevent.failedContents") }
 					inline = false
 				}
 				field {
-					name = "New contents"
-					value = message.trimmedContents().ifNullOrEmpty { "Failed to retrieve new message contents" }
+					name = provider.translate("extensions.events.messageedit.embed.new")
+					value = message.trimmedContents()
+						.ifNullOrEmpty { provider.translate("extensions.events.messageedit.embed.new.fail") }
 					inline = false
 				}
 				attachmentsAndProxiedMessageInfo(guild, message, proxiedMessage)
 			}
 			components {
 				linkButton {
-					label = "Jump"
+					label = provider.translate("extensions.events.messageedit.embed.button")
 					url = message.getJumpUrl()
 				}
 			}
